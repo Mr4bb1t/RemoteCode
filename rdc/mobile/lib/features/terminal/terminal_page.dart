@@ -42,7 +42,9 @@ class _TerminalPageState extends State<TerminalPage> {
       path: '/ws/terminal/$_sessionId',
       queryParams: {'shell': _selectedShell},
       onMessage: (msg) {
-        setState(() { _lines.add(msg); });
+        // Strip ANSI escape codes
+        final cleanMsg = msg.replaceAll(RegExp(r'\x1B\[[0-?]*[ -/]*[@-~]'), '');
+        setState(() { _lines.add(cleanMsg); });
         WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
       },
       onError: (e) => setState(() { _lines.add('\r\n[Erro de conexão: $e]\r\n'); _connected = false; }),
@@ -55,7 +57,7 @@ class _TerminalPageState extends State<TerminalPage> {
     if (input.isEmpty) return;
     _history.insert(0, input);
     _historyIndex = -1;
-    _ws?.send(input + '\n');
+    _ws?.send(input + '\r\n');
     _inputController.clear();
   }
 

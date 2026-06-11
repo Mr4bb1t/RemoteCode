@@ -4,6 +4,7 @@ RDC Agent — Git API
 from __future__ import annotations
 
 from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi.concurrency import run_in_threadpool
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -43,7 +44,7 @@ async def git_status(
 ) -> GitStatusResponse:
     path = await _project_path(project_id, db)
     try:
-        return git_service.get_status(path)
+        return await run_in_threadpool(git_service.get_status, path)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 
@@ -57,7 +58,7 @@ async def git_log(
 ) -> GitLogResponse:
     path = await _project_path(project_id, db)
     try:
-        return git_service.get_log(path, limit=limit)
+        return await run_in_threadpool(git_service.get_log, path, limit)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 
@@ -71,7 +72,7 @@ async def git_diff(
 ) -> GitDiffResponse:
     path = await _project_path(project_id, db)
     try:
-        return git_service.get_diff(path, file_path)
+        return await run_in_threadpool(git_service.get_diff, path, file_path)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 
@@ -84,7 +85,7 @@ async def git_branches(
 ) -> GitBranchList:
     path = await _project_path(project_id, db)
     try:
-        return git_service.list_branches(path)
+        return await run_in_threadpool(git_service.list_branches, path)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 
@@ -98,7 +99,7 @@ async def git_commit(
 ) -> GitOperationResult:
     path = await _project_path(project_id, db)
     try:
-        return git_service.commit(path, body.message, body.stage_all, body.files)
+        return await run_in_threadpool(git_service.commit, path, body.message, body.stage_all, body.files)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 
@@ -112,7 +113,7 @@ async def git_push(
 ) -> GitOperationResult:
     path = await _project_path(project_id, db)
     try:
-        return git_service.push(path, body.remote, body.branch)
+        return await run_in_threadpool(git_service.push, path, body.remote, body.branch)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 
@@ -126,7 +127,7 @@ async def git_pull(
 ) -> GitOperationResult:
     path = await _project_path(project_id, db)
     try:
-        return git_service.pull(path, body.remote, body.branch)
+        return await run_in_threadpool(git_service.pull, path, body.remote, body.branch)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 
@@ -140,7 +141,7 @@ async def git_checkout(
 ) -> GitOperationResult:
     path = await _project_path(project_id, db)
     try:
-        return git_service.checkout(path, body.branch, body.create)
+        return await run_in_threadpool(git_service.checkout, path, body.branch, body.create)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 
@@ -154,7 +155,7 @@ async def git_create_branch(
 ) -> GitOperationResult:
     path = await _project_path(project_id, db)
     try:
-        return git_service.create_branch(path, body.name, body.from_branch)
+        return await run_in_threadpool(git_service.create_branch, path, body.name, body.from_branch)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 
@@ -167,6 +168,6 @@ async def git_fetch(
 ) -> GitOperationResult:
     path = await _project_path(project_id, db)
     try:
-        return git_service.fetch(path)
+        return await run_in_threadpool(git_service.fetch, path)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))

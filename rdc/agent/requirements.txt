@@ -19,3 +19,4 @@ trustme==1.2.0
 aiofiles==24.1.0
 rich==13.9.4
 typer==0.15.1
+litellm>=1.88.0

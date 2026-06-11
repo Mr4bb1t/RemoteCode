@@ -52,10 +52,15 @@ async def terminal_ws(
     async def reader():
         """Lê output do PTY e envia ao cliente."""
         while session.alive:
-            output = read_from_session(session_id)
-            if output:
-                await websocket.send_text(output)
-            await asyncio.sleep(READ_INTERVAL)
+            try:
+                # Usa to_thread porque read_from_session (pywinpty.read) é bloqueante
+                output = await asyncio.to_thread(read_from_session, session_id)
+                if output:
+                    await websocket.send_text(output)
+                else:
+                    await asyncio.sleep(READ_INTERVAL)
+            except Exception:
+                break
 
     reader_task = asyncio.create_task(reader())
 

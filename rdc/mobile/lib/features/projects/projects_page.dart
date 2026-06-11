@@ -154,7 +154,7 @@ class _ProjectsPageState extends ConsumerState<ProjectsPage> {
             itemCount: projects.length,
             itemBuilder: (ctx, i) => _ProjectCard(
               project: projects[i],
-              onTap: () => context.go('/workspace/${projects[i].id}?name=${Uri.encodeComponent(projects[i].name)}'),
+              onTap: () => context.push('/workspace/${projects[i].id}?name=${Uri.encodeComponent(projects[i].name)}'),
               onFavorite: () => _toggleFavorite(projects[i].id),
               onDelete: () => _deleteProject(projects[i].id),
             ),

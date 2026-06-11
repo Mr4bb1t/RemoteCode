@@ -103,11 +103,29 @@ class DashboardPage extends ConsumerWidget {
             onPressed: () => context.go('/projects'),
           ),
           IconButton(
-            icon: const Icon(Icons.settings_outlined),
-            tooltip: 'Configurações',
+            icon: const Icon(Icons.logout),
+            tooltip: 'Desconectar',
             onPressed: () async {
-              await ref.read(authProvider.notifier).logout();
-              if (context.mounted) context.go('/settings');
+              final confirm = await showDialog<bool>(
+                context: context,
+                builder: (ctx) => AlertDialog(
+                  backgroundColor: RdcTheme.bg700,
+                  title: const Text('Desconectar', style: TextStyle(color: RdcTheme.textPrimary)),
+                  content: const Text('Deseja realmente desconectar do agente?', style: TextStyle(color: RdcTheme.textSecondary)),
+                  actions: [
+                    TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancelar')),
+                    ElevatedButton(
+                      style: ElevatedButton.styleFrom(backgroundColor: RdcTheme.danger),
+                      onPressed: () => Navigator.pop(ctx, true),
+                      child: const Text('Desconectar', style: TextStyle(color: Colors.white)),
+                    ),
+                  ],
+                ),
+              );
+              if (confirm == true) {
+                await ref.read(authProvider.notifier).logout();
+                if (context.mounted) context.go('/settings');
+              }
             },
           ),
         ],
@@ -122,8 +140,18 @@ class DashboardPage extends ConsumerWidget {
               const Icon(Icons.cloud_off, size: 64, color: RdcTheme.textMuted),
               const SizedBox(height: 16),
               Text('Sem conexão com o agente', style: GoogleFonts.inter(color: RdcTheme.textSecondary)),
+              const SizedBox(height: 16),
+              ElevatedButton.icon(
+                onPressed: () => ref.invalidate(systemInfoProvider),
+                icon: const Icon(Icons.refresh, size: 18),
+                label: const Text('Tentar Reconectar'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: RdcTheme.primary,
+                  foregroundColor: Colors.white,
+                ),
+              ),
               const SizedBox(height: 8),
-              TextButton(onPressed: () => context.go('/settings'), child: const Text('Reconfigurar')),
+              TextButton(onPressed: () => context.go('/settings'), child: const Text('Mudar URL / Agente')),
             ],
           ),
         ),

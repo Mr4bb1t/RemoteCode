@@ -42,8 +42,9 @@ class Settings(BaseSettings):
     ssl_certfile: Path = BASE_DIR / "certs" / "cert.pem"
     ssl_keyfile: Path = BASE_DIR / "certs" / "key.pem"
 
-    # ── Antigravity ─────────────────────────────────────────────────────────
-    antigravity_command: str = "antigravity"  # ajuste para o caminho real
+    # ── Antigravity (AI Agent) ──────────────────────────────────────────────
+    ai_model: str = "gemini/gemini-2.5-flash"  # Padrão litellm para o Gemini
+    ai_api_key: str = ""
 
     # ── Preview Proxy ────────────────────────────────────────────────────────
     proxy_base_path: str = "/proxy"

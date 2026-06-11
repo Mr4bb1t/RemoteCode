@@ -13,6 +13,7 @@ from api.git import router as git_router
 from api.tests import router as tests_router
 from api.preview import router as preview_router
 from api.antigravity import router as antigravity_router
+from api.settings import router as settings_router
 
 router = APIRouter()
 
@@ -24,3 +25,4 @@ router.include_router(git_router)
 router.include_router(tests_router)
 router.include_router(preview_router)
 router.include_router(antigravity_router)
+router.include_router(settings_router)

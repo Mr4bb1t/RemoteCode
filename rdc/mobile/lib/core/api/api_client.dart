@@ -1,4 +1,4 @@
-/// RDC — Cliente HTTP com Dio + interceptor de JWT automático
+import 'dart:io';
 import 'package:dio/dio.dart';
 import '../storage/secure_storage.dart';
 
@@ -18,8 +18,8 @@ class ApiClient {
     );
 
     // Adaptar para certificados auto-assinados
-    (_dio.httpClientAdapter as dynamic).onHttpClientCreate = (client) {
-      client.badCertificateCallback = (cert, host, port) => true;
+    (_dio.httpClientAdapter as dynamic).onHttpClientCreate = (HttpClient client) {
+      client.badCertificateCallback = (X509Certificate cert, String host, int port) => true;
       return client;
     };
 

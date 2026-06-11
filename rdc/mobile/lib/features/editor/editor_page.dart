@@ -1,5 +1,6 @@
 /// RDC — Editor de código com syntax highlight
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_highlight/flutter_highlight.dart';
 import 'package:flutter_highlight/themes/atom-one-dark.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -26,6 +27,7 @@ class EditorPage extends StatefulWidget {
 class _EditorPageState extends State<EditorPage> {
   final _ctrl = TextEditingController();
   final _undoHistory = <String>[];
+  String _previousText = '';
   String? _language;
   bool _loading = false;
   bool _modified = false;
@@ -58,6 +60,7 @@ class _EditorPageState extends State<EditorPage> {
       if (res.statusCode == 200) {
         _undoHistory.clear();
         _ctrl.text = res.data['content'] ?? '';
+        _previousText = _ctrl.text;
         setState(() {
           _language = res.data['language'];
           _currentPath = widget.filePath;
@@ -93,15 +96,24 @@ class _EditorPageState extends State<EditorPage> {
   }
 
   void _onChanged(String val) {
-    _undoHistory.add(_ctrl.text);
+    _undoHistory.add(_previousText);
     if (_undoHistory.length > 100) _undoHistory.removeAt(0);
+    _previousText = val;
     setState(() => _modified = true);
   }
 
   void _undo() {
     if (_undoHistory.isEmpty) return;
     final prev = _undoHistory.removeLast();
+    _previousText = prev;
     _ctrl.value = TextEditingValue(text: prev, selection: TextSelection.collapsed(offset: prev.length));
+  }
+
+  void _copy() {
+    Clipboard.setData(ClipboardData(text: _ctrl.text));
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('✓ Código copiado'), backgroundColor: RdcTheme.success, duration: Duration(seconds: 1)),
+    );
   }
 
   @override
@@ -141,7 +153,7 @@ class _EditorPageState extends State<EditorPage> {
             if (_modified) const Text('●', style: TextStyle(color: RdcTheme.warning, fontSize: 16)),
             const SizedBox(width: 8),
             _EditorBtn(icon: Icons.undo, tooltip: 'Desfazer', onTap: _undo),
-            _EditorBtn(icon: Icons.content_copy, tooltip: 'Copiar', onTap: () {}),
+            _EditorBtn(icon: Icons.content_copy, tooltip: 'Copiar', onTap: _copy),
             _EditorBtn(
               icon: _readOnly ? Icons.lock : Icons.lock_open,
               tooltip: _readOnly ? 'Modo Somente Leitura' : 'Modo Edição',
@@ -186,7 +198,7 @@ class _HighlightView extends StatelessWidget {
 
 // ── Editor editável com números de linha ──────────────────────────────────────
 
-class _EditableView extends StatelessWidget {
+class _EditableView extends StatefulWidget {
   final TextEditingController controller;
   final String? language;
   final void Function(String) onChanged;
@@ -198,6 +210,31 @@ class _EditableView extends StatelessWidget {
   });
 
   @override
+  State<_EditableView> createState() => _EditableViewState();
+}
+
+class _EditableViewState extends State<_EditableView> {
+  final _scrollController = ScrollController();
+  final _linesController = ScrollController();
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(() {
+      if (_linesController.hasClients && _scrollController.hasClients) {
+        _linesController.jumpTo(_scrollController.offset);
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    _linesController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -206,10 +243,12 @@ class _EditableView extends StatelessWidget {
         SizedBox(
           width: 44,
           child: AnimatedBuilder(
-            animation: controller,
+            animation: widget.controller,
             builder: (ctx, _) {
-              final lines = '\n'.allMatches(controller.text).length + 1;
+              final lines = '\n'.allMatches(widget.controller.text).length + 1;
               return ListView.builder(
+                controller: _linesController,
+                physics: const NeverScrollableScrollPhysics(),
                 padding: const EdgeInsets.only(top: 16, left: 8),
                 itemCount: lines,
                 itemBuilder: (_, i) => SizedBox(
@@ -224,10 +263,11 @@ class _EditableView extends StatelessWidget {
         // Área de texto
         Expanded(
           child: TextField(
-            controller: controller,
+            controller: widget.controller,
+            scrollController: _scrollController,
             maxLines: null,
             expands: true,
-            onChanged: onChanged,
+            onChanged: widget.onChanged,
             keyboardType: TextInputType.multiline,
             style: GoogleFonts.firaCode(fontSize: 13, color: RdcTheme.textPrimary, height: 1.5),
             decoration: const InputDecoration(

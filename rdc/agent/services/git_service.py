@@ -70,7 +70,6 @@ def get_log(project_path: str, limit: int = 50) -> GitLogResponse:
     repo = _open_repo(project_path)
     commits: list[GitCommit] = []
     for c in repo.iter_commits(max_count=limit):
-        stat = c.stats
         commits.append(
             GitCommit(
                 sha=c.hexsha,
@@ -79,7 +78,7 @@ def get_log(project_path: str, limit: int = 50) -> GitLogResponse:
                 author=c.author.name,
                 email=c.author.email,
                 date=c.authored_datetime.isoformat(),
-                files_changed=len(stat.files),
+                files_changed=0, # Removido c.stats para performance drástica
             )
         )
     return GitLogResponse(commits=commits, total=len(commits))

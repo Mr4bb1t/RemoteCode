@@ -93,7 +93,18 @@ def main() -> None:
     parser.add_argument("--host", default=settings.host, help="Host de escuta")
     parser.add_argument("--port", type=int, default=settings.port, help="Porta")
     parser.add_argument("--password", help="Sobrescrever senha do agente")
+    parser.add_argument("--cli", action="store_true", help="Inicia em modo texto (sem interface gráfica)")
     args = parser.parse_args()
+
+    # Se não foi pedido modo CLI, tenta carregar a Interface Gráfica
+    if not args.cli:
+        try:
+            import gui
+            gui.start_gui()
+            return
+        except Exception as e:
+            print(f"[RDC] Erro ao carregar interface gráfica: {e}")
+            print("[RDC] Iniciando em modo CLI...")
 
     if args.password:
         settings.agent_password = args.password
