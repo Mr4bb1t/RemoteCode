@@ -23,7 +23,10 @@ class PreviewPage extends StatefulWidget {
   State<PreviewPage> createState() => _PreviewPageState();
 }
 
-class _PreviewPageState extends State<PreviewPage> {
+class _PreviewPageState extends State<PreviewPage> with AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => true;
+
   List<dynamic> _ports = [];
   int? _selectedPort;
   bool _loading = true;
@@ -48,7 +51,6 @@ class _PreviewPageState extends State<PreviewPage> {
     try {
       final res = await ApiClient.instance.get('/api/preview/ports');
       setState(() { _ports = res.data ?? []; _loading = false; });
-      if (_ports.isNotEmpty) _selectPort(_ports.first['port']);
     } catch (e) {
       setState(() => _loading = false);
     }
@@ -60,20 +62,63 @@ class _PreviewPageState extends State<PreviewPage> {
     final token = await SecureStorage.getAccessToken() ?? '';
 
     // URL do proxy do agente
-    final proxyUrl = '$agentUrl/proxy/$port';
+    final proxyUrl = '$agentUrl/api/preview/proxy/$port';
     setState(() => _currentUrl = proxyUrl);
 
     final ctrl = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
       ..setBackgroundColor(Colors.white)
-      ..setNavigationDelegate(NavigationDelegate())
+      ..setNavigationDelegate(NavigationDelegate(
+        onWebResourceError: (error) => debugPrint('WebView Error: ${error.description}'),
+      ))
       ..loadRequest(Uri.parse(proxyUrl), headers: {'Authorization': 'Bearer $token'});
 
     setState(() => _webCtrl = ctrl);
   }
 
+  void _showManualPortDialog() {
+    final ctrl = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (c) => AlertDialog(
+        backgroundColor: RdcTheme.bg800,
+        title: Text('Porta Manual', style: GoogleFonts.inter(color: Colors.white)),
+        content: TextField(
+          controller: ctrl,
+          keyboardType: TextInputType.number,
+          style: GoogleFonts.firaCode(color: Colors.white),
+          decoration: const InputDecoration(
+            hintText: 'Ex: 3000',
+            hintStyle: TextStyle(color: Colors.white54),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(c),
+            child: const Text('Cancelar', style: TextStyle(color: RdcTheme.textMuted)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: RdcTheme.primary),
+            onPressed: () {
+              final p = int.tryParse(ctrl.text.trim());
+              if (p != null) {
+                if (!_ports.any((e) => e['port'] == p)) {
+                  setState(() => _ports.add({'port': p, 'framework_hint': 'Manual'}));
+                }
+                _selectPort(p);
+              }
+              Navigator.pop(c);
+            },
+            child: const Text('Conectar', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     return Column(children: [
       // Toolbar
       Container(
@@ -104,36 +149,48 @@ class _PreviewPageState extends State<PreviewPage> {
             Expanded(
               child: _loading
                   ? const LinearProgressIndicator()
-                  : _ports.isEmpty
-                      ? Text('Nenhum servidor detectado', style: GoogleFonts.inter(fontSize: 12, color: RdcTheme.textMuted))
-                      : SingleChildScrollView(
-                          scrollDirection: Axis.horizontal,
-                          child: Row(
-                            children: _ports.map((p) {
-                              final port = p['port'] as int;
-                              final hint = p['framework_hint'] as String? ?? '';
-                              final selected = port == _selectedPort;
-                              return Padding(
-                                padding: const EdgeInsets.only(right: 8),
-                                child: GestureDetector(
-                                  onTap: () => _selectPort(port),
-                                  child: Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                                    decoration: BoxDecoration(
-                                      color: selected ? RdcTheme.primary.withOpacity(0.2) : RdcTheme.bg600,
-                                      borderRadius: BorderRadius.circular(8),
-                                      border: Border.all(color: selected ? RdcTheme.primary : RdcTheme.bg500),
-                                    ),
-                                    child: Column(mainAxisSize: MainAxisSize.min, children: [
-                                      Text(':$port', style: GoogleFonts.firaCode(fontSize: 12, color: selected ? RdcTheme.primary : RdcTheme.textPrimary, fontWeight: FontWeight.w700)),
-                                      if (hint.isNotEmpty) Text(hint.split('/').first.trim(), style: GoogleFonts.inter(fontSize: 9, color: RdcTheme.textMuted)),
-                                    ]),
+                  : SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        children: [
+                          if (_ports.isEmpty)
+                            Padding(
+                              padding: const EdgeInsets.only(right: 8.0, top: 8),
+                              child: Text('Nenhum servidor detectado', style: GoogleFonts.inter(fontSize: 12, color: RdcTheme.textMuted)),
+                            ),
+                          ..._ports.map((p) {
+                            final port = p['port'] as int;
+                            final hint = p['framework_hint'] as String? ?? '';
+                            final selected = port == _selectedPort;
+                            return Padding(
+                              padding: const EdgeInsets.only(right: 8),
+                              child: GestureDetector(
+                                onTap: () => _selectPort(port),
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                  decoration: BoxDecoration(
+                                    color: selected ? RdcTheme.primary.withOpacity(0.2) : RdcTheme.bg600,
+                                    borderRadius: BorderRadius.circular(8),
+                                    border: Border.all(color: selected ? RdcTheme.primary : RdcTheme.bg500),
                                   ),
+                                  child: Column(mainAxisSize: MainAxisSize.min, children: [
+                                    Text(':$port', style: GoogleFonts.firaCode(fontSize: 12, color: selected ? RdcTheme.primary : RdcTheme.textPrimary, fontWeight: FontWeight.w700)),
+                                    if (hint.isNotEmpty) Text(hint.split('/').first.trim(), style: GoogleFonts.inter(fontSize: 9, color: RdcTheme.textMuted)),
+                                  ]),
                                 ),
-                              );
-                            }).toList(),
-                          ),
-                        ),
+                              ),
+                            );
+                          }).toList(),
+                          // Add manual port button
+                          IconButton(
+                            icon: const Icon(Icons.add_circle_outline, size: 22),
+                            color: RdcTheme.primary,
+                            tooltip: 'Adicionar porta manualmente',
+                            onPressed: _showManualPortDialog,
+                          )
+                        ],
+                      ),
+                    ),
             ),
             // Device presets
             Row(

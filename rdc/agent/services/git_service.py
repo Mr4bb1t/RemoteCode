@@ -51,8 +51,12 @@ def get_status(project_path: str) -> GitStatusResponse:
     for item in repo.index.diff(None):  # working tree vs index
         modified.append(GitFileStatus(path=item.a_path, status=item.change_type))
 
-    for item in repo.index.diff("HEAD"):  # index vs HEAD
-        staged.append(GitFileStatus(path=item.a_path, status=item.change_type))
+    if repo.head.is_valid():
+        for item in repo.index.diff("HEAD"):  # index vs HEAD
+            staged.append(GitFileStatus(path=item.a_path, status=item.change_type))
+    else:
+        for (path, _), _ in repo.index.entries.items():
+            staged.append(GitFileStatus(path=path, status="A"))
 
     return GitStatusResponse(
         branch=branch,
@@ -69,23 +73,27 @@ def get_status(project_path: str) -> GitStatusResponse:
 def get_log(project_path: str, limit: int = 50) -> GitLogResponse:
     repo = _open_repo(project_path)
     commits: list[GitCommit] = []
-    for c in repo.iter_commits(max_count=limit):
-        commits.append(
-            GitCommit(
-                sha=c.hexsha,
-                short_sha=c.hexsha[:7],
-                message=c.message.strip(),
-                author=c.author.name,
-                email=c.author.email,
-                date=c.authored_datetime.isoformat(),
-                files_changed=0, # Removido c.stats para performance drástica
+    if repo.head.is_valid():
+        for c in repo.iter_commits(max_count=limit):
+            commits.append(
+                GitCommit(
+                    sha=c.hexsha,
+                    short_sha=c.hexsha[:7],
+                    message=c.message.strip(),
+                    author=c.author.name,
+                    email=c.author.email,
+                    date=c.authored_datetime.isoformat(),
+                    files_changed=0, # Removido c.stats para performance drástica
+                )
             )
-        )
     return GitLogResponse(commits=commits, total=len(commits))
 
 
 def get_diff(project_path: str, file_path: str | None = None) -> GitDiffResponse:
     repo = _open_repo(project_path)
+    if not repo.head.is_valid():
+        return GitDiffResponse(diff="")
+    
     try:
         if file_path:
             diff = repo.git.diff("HEAD", "--", file_path)
@@ -103,7 +111,10 @@ def commit(project_path: str, message: str, stage_all: bool = True, files: list[
             repo.git.add("-A")
         elif files:
             repo.index.add(files)
-        if not repo.index.diff("HEAD") and not repo.untracked_files:
+        has_head = repo.head.is_valid()
+        has_staged = bool(repo.index.diff("HEAD")) if has_head else bool(repo.index.entries)
+        
+        if not has_staged and not repo.untracked_files:
             return GitOperationResult(success=False, message="Nada para commitar")
         c = repo.index.commit(message)
         return GitOperationResult(success=True, message=f"Commit criado: {c.hexsha[:7]}")

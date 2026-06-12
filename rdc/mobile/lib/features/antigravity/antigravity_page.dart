@@ -1,11 +1,14 @@
 /// RDC — Módulo Antigravity (AI Agent)
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
+import 'package:http/io_client.dart' as http_io;
+import 'package:flutter_markdown/flutter_markdown.dart';
 
 import '../../core/api/api_client.dart';
 import '../../core/storage/secure_storage.dart';
@@ -42,7 +45,9 @@ class AntigravityPage extends StatefulWidget {
   State<AntigravityPage> createState() => _AntigravityPageState();
 }
 
-class _AntigravityPageState extends State<AntigravityPage> {
+class _AntigravityPageState extends State<AntigravityPage> with AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => true;
   final _promptCtrl = TextEditingController();
   final _scrollCtrl = ScrollController();
   final List<_ChatMsg> _msgs = [];
@@ -58,6 +63,7 @@ class _AntigravityPageState extends State<AntigravityPage> {
   void initState() {
     super.initState();
     _loadModel();
+    _loadHistory();
   }
 
   Future<void> _loadModel() async {
@@ -87,16 +93,100 @@ class _AntigravityPageState extends State<AntigravityPage> {
     });
   }
 
+  Future<void> _loadHistory() async {
+    try {
+      final res = await ApiClient.instance.get('/api/antigravity/history/${widget.projectId}');
+      if (res.statusCode == 200) {
+        final List runs = res.data;
+        // API returns newest first. Sort to oldest first.
+        runs.sort((a, b) => (a['id'] as int).compareTo(b['id'] as int));
+        
+        final List<_ChatMsg> historyMsgs = [];
+        for (var run in runs) {
+          final runId = run['id'];
+          final prompt = run['prompt'];
+          final outputLog = run['output_log'] ?? '';
+          final files = List<String>.from(run['files_changed'] ?? []);
+          final status = run['status'];
+          final elapsed = run['execution_time_s'];
+
+          historyMsgs.add(_ChatMsg(role: _MsgRole.user, text: prompt, runId: runId));
+          
+          final lines = outputLog.toString().split('\n');
+          final aiText = StringBuffer();
+          for (var line in lines) {
+            if (line.trim().startsWith('{"tool_call"')) {
+              try {
+                final d = jsonDecode(line);
+                historyMsgs.add(_ChatMsg(role: _MsgRole.tool, text: d['tool_call']['name'] ?? 'tool'));
+              } catch (_) {}
+            } else {
+              aiText.write('$line\n');
+            }
+          }
+          
+          if (aiText.isNotEmpty) {
+            historyMsgs.add(_ChatMsg(
+              role: _MsgRole.ai, 
+              text: aiText.toString().trim(),
+            ));
+          }
+          
+          if (status == 'approved') {
+            historyMsgs.add(_ChatMsg(role: _MsgRole.system, text: '✅ Alterações aplicadas', runId: runId));
+          } else if (status == 'rejected') {
+            historyMsgs.add(_ChatMsg(role: _MsgRole.system, text: '🔄 Alterações revertidas', runId: runId));
+          } else if (files.isNotEmpty && status == 'success') {
+            historyMsgs.add(_ChatMsg(
+              role: _MsgRole.system,
+              text: '✅ Concluído em ${elapsed}s · ${files.length} arquivo(s) modificado(s)',
+              runId: runId,
+              filesChanged: files,
+              canApprove: true,
+            ));
+          } else if (status == 'error') {
+            historyMsgs.add(_ChatMsg(role: _MsgRole.system, text: '❌ Erro na execução', runId: runId));
+          }
+        }
+
+        if (mounted) {
+          setState(() {
+            _msgs.addAll(historyMsgs);
+          });
+          _scrollToBottom();
+        }
+      }
+    } catch (_) {}
+  }
+
   // ── Undo: remove último par user+ai ────────────────────────────────────────
 
-  void _undo() {
+  Future<void> _undo() async {
     if (_running || _msgs.isEmpty) return;
+
+    // Buscar último runId antes de remover para reverter alterações no backend
+    int? lastRunId;
+    for (var m in _msgs.reversed) {
+      if (m.runId != null) {
+        lastRunId = m.runId;
+        break;
+      }
+    }
+
+    if (lastRunId != null) {
+      try {
+        await ApiClient.instance.post('/api/antigravity/run/$lastRunId/approve', data: {'run_id': lastRunId, 'approve': false});
+      } catch (_) {}
+    }
+
     setState(() {
       // Remove mensagens até encontrar o último user
       while (_msgs.isNotEmpty && _msgs.last.role != _MsgRole.user) {
         _msgs.removeLast();
       }
-      if (_msgs.isNotEmpty) _msgs.removeLast(); // remove o user também
+      if (_msgs.isNotEmpty && _msgs.last.role == _MsgRole.user) {
+        _promptCtrl.text = _msgs.removeLast().text;
+      }
     });
   }
 
@@ -125,7 +215,8 @@ class _AntigravityPageState extends State<AntigravityPage> {
       request.headers['Content-Type'] = 'application/json';
       request.body = jsonEncode({'project_id': widget.projectId, 'prompt': prompt});
 
-      final client = http.Client();
+      final httpClient = HttpClient()..badCertificateCallback = (cert, host, port) => true;
+      final client = http_io.IOClient(httpClient);
       final response = await client.send(request);
 
       await for (final chunk in response.stream.transform(utf8.decoder)) {
@@ -237,6 +328,7 @@ class _AntigravityPageState extends State<AntigravityPage> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     return Column(children: [
       // Header
       Container(
@@ -442,14 +534,28 @@ class _MessageBubble extends StatelessWidget {
           ),
         ),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          SelectableText(
-            msg.text,
-            style: GoogleFonts.inter(
-              fontSize: 13,
-              color: isUser ? Colors.white : RdcTheme.textPrimary,
-              height: 1.5,
-            ),
-          ),
+          isUser 
+            ? SelectableText(
+                msg.text,
+                style: GoogleFonts.inter(
+                  fontSize: 13,
+                  color: Colors.white,
+                  height: 1.5,
+                ),
+              )
+            : MarkdownBody(
+                data: msg.text,
+                selectable: true,
+                styleSheet: MarkdownStyleSheet(
+                  p: GoogleFonts.inter(fontSize: 13, color: RdcTheme.textPrimary, height: 1.5),
+                  h1: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.bold, color: RdcTheme.textPrimary),
+                  h2: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.bold, color: RdcTheme.textPrimary),
+                  h3: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.bold, color: RdcTheme.textPrimary),
+                  code: GoogleFonts.firaCode(fontSize: 12, backgroundColor: Colors.transparent, color: RdcTheme.primary),
+                  codeblockDecoration: BoxDecoration(color: Colors.black.withOpacity(0.3), borderRadius: BorderRadius.circular(8)),
+                  codeblockPadding: const EdgeInsets.all(12),
+                ),
+              ),
           // Arquivos modificados
           if (msg.filesChanged.isNotEmpty) ...[
             const SizedBox(height: 8),

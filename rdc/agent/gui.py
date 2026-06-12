@@ -26,7 +26,7 @@ class AgentGUI:
     def __init__(self, root):
         self.root = root
         self.root.title("RDC Agent")
-        self.root.geometry("420x320")
+        self.root.geometry("450x360")
         self.root.resizable(False, False)
         
         # Estilo
@@ -114,10 +114,10 @@ class AgentGUI:
         
         # URL
         ttk.Label(frame_info, text="URL do Agente:").grid(row=0, column=0, sticky=tk.W, pady=5, padx=5)
-        url_entry = ttk.Entry(frame_info, width=28)
-        url_entry.insert(0, f"https://{ip}:{port}")
-        url_entry.config(state="readonly")
-        url_entry.grid(row=0, column=1, sticky=tk.W, padx=5)
+        self.url_entry = ttk.Entry(frame_info, width=32)
+        self.url_entry.insert(0, f"https://{ip}:{port}")
+        self.url_entry.config(state="readonly")
+        self.url_entry.grid(row=0, column=1, sticky=tk.W, padx=5)
         
         # Senha
         ttk.Label(frame_info, text="Sua Senha:").grid(row=1, column=0, sticky=tk.W, pady=5, padx=5)
@@ -134,12 +134,57 @@ class AgentGUI:
             
         ttk.Button(frame_info, text="Ver", width=4, command=toggle_pwd).grid(row=1, column=2, padx=5)
         
+        # Opções
+        frame_tunnel = ttk.Frame(frame)
+        frame_tunnel.pack(fill=tk.X, pady=(5, 0))
+        self.use_tunnel_var = tk.BooleanVar(value=False)
+        chk_tunnel = ttk.Checkbutton(frame_tunnel, text="Acesso Global (Cloudflare)", variable=self.use_tunnel_var)
+        chk_tunnel.pack(side=tk.LEFT)
+        btn_cf = ttk.Button(frame_tunnel, text="⚙️ Configurar Fixo", width=16, command=self.config_cloudflare)
+        btn_cf.pack(side=tk.RIGHT)
+        
         # Status e Ações
         self.lbl_status = ttk.Label(frame, text="Status: Aguardando...", foreground="red", font=("Arial", 12, "bold"))
-        self.lbl_status.pack(pady=15)
+        self.lbl_status.pack(pady=10)
         
         self.btn_toggle = ttk.Button(frame, text="Iniciar Servidor", command=self.toggle_server, width=20)
         self.btn_toggle.pack(pady=5)
+
+    def config_cloudflare(self):
+        cf_token = os.environ.get("CF_TUNNEL_TOKEN", "")
+        cf_url = os.environ.get("CF_TUNNEL_URL", "")
+        
+        top = tk.Toplevel(self.root)
+        top.title("Configurar Cloudflare Fixo")
+        top.geometry("380x260")
+        top.resizable(False, False)
+        
+        ttk.Label(top, text="Se você possui um túnel permanente no Cloudflare Zero Trust,\ninsira o Token abaixo para manter a mesma URL sempre.", justify=tk.CENTER).pack(pady=(10, 10))
+        
+        ttk.Label(top, text="Cloudflare Tunnel Token:").pack(anchor=tk.W, padx=20)
+        entry_token = ttk.Entry(top, width=50)
+        entry_token.insert(0, cf_token)
+        entry_token.pack(padx=20, pady=5)
+        
+        ttk.Label(top, text="URL do Túnel (ex: https://meu-app.com):").pack(anchor=tk.W, padx=20, pady=(10,0))
+        entry_url = ttk.Entry(top, width=50)
+        entry_url.insert(0, cf_url)
+        entry_url.pack(padx=20, pady=5)
+        
+        def save():
+            token = entry_token.get().strip()
+            url = entry_url.get().strip()
+            if not env_path.exists():
+                with open(env_path, "w", encoding="utf-8") as f:
+                    f.write("\n")
+            set_key(str(env_path), "CF_TUNNEL_TOKEN", token)
+            set_key(str(env_path), "CF_TUNNEL_URL", url)
+            os.environ["CF_TUNNEL_TOKEN"] = token
+            os.environ["CF_TUNNEL_URL"] = url
+            messagebox.showinfo("Sucesso", "Configuração salva! Use a opção de Acesso Global para iniciar.")
+            top.destroy()
+            
+        ttk.Button(top, text="Salvar", command=save).pack(pady=15)
 
     def toggle_server(self):
         if not self.is_running:
@@ -172,6 +217,87 @@ class AgentGUI:
         self.is_running = True
         self.lbl_status.config(text="Status: Online e Pronto", foreground="green")
         self.btn_toggle.config(state="disabled", text="Servidor Rodando")
+        
+        if self.use_tunnel_var.get():
+            threading.Thread(target=self._start_tunnel, args=(settings.port,), daemon=True).start()
+
+    def _start_tunnel(self, port):
+        self.lbl_status.config(text="Status: Iniciando Túnel...", foreground="orange")
+        cf_token = os.environ.get("CF_TUNNEL_TOKEN", "").strip()
+        cf_url = os.environ.get("CF_TUNNEL_URL", "").strip()
+        try:
+            import pycloudflared
+            from pycloudflared.util import get_info, download
+            from pathlib import Path
+            import subprocess
+            import re
+            
+            info = get_info()
+            if not Path(info.executable).exists():
+                download(info)
+                
+            if cf_token:
+                args = [
+                    info.executable,
+                    "tunnel",
+                    "--no-autoupdate",
+                    "run",
+                    "--token",
+                    cf_token
+                ]
+                proc = subprocess.Popen(args, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, encoding="utf-8")
+                
+                if cf_url:
+                    self.url_entry.config(state="normal")
+                    self.url_entry.delete(0, tk.END)
+                    self.url_entry.insert(0, cf_url)
+                    self.url_entry.config(state="readonly")
+                    
+                self.lbl_status.config(text="Status: Túnel Fixo Ativo", foreground="green")
+            else:
+                args = [
+                    info.executable,
+                    "tunnel",
+                    "--protocol",
+                    "http2",
+                    "--url",
+                    f"https://127.0.0.1:{port}",
+                    "--no-tls-verify"
+                ]
+                
+                proc = subprocess.Popen(
+                    args,
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.PIPE,
+                    encoding="utf-8"
+                )
+                
+                url_pattern = re.compile(r"(https?://\S+\.trycloudflare\.com)")
+                tunnel_url = ""
+                for _ in range(50):
+                    line = proc.stderr.readline()
+                    if not line:
+                        break
+                    match = url_pattern.search(line)
+                    if match:
+                        tunnel_url = match.group(1)
+                        break
+                        
+                if tunnel_url:
+                    self.url_entry.config(state="normal")
+                    self.url_entry.delete(0, tk.END)
+                    self.url_entry.insert(0, tunnel_url)
+                    self.url_entry.config(state="readonly")
+                    self.lbl_status.config(text="Status: Túnel Ativo", foreground="green")
+                else:
+                    self.lbl_status.config(text="Status: Falha no Túnel", foreground="red")
+                    proc.terminate()
+        except ImportError:
+            messagebox.showerror("Erro", "pycloudflared não instalado. Rode: pip install pycloudflared")
+            self.lbl_status.config(text="Status: Servidor Local (Sem Túnel)", foreground="green")
+        except Exception as e:
+            messagebox.showerror("Erro Túnel", f"Erro ao iniciar túnel: {e}")
+            self.lbl_status.config(text="Status: Falha no Túnel", foreground="red")
 
     def clear_window(self):
         for widget in self.root.winfo_children():

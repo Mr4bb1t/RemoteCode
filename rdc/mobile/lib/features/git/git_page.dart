@@ -13,7 +13,9 @@ class GitPage extends StatefulWidget {
   State<GitPage> createState() => _GitPageState();
 }
 
-class _GitPageState extends State<GitPage> with SingleTickerProviderStateMixin {
+class _GitPageState extends State<GitPage> with SingleTickerProviderStateMixin, AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => true;
   late TabController _tabs;
   Map<String, dynamic>? _status;
   List<dynamic> _commits = [];
@@ -85,6 +87,7 @@ class _GitPageState extends State<GitPage> with SingleTickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     if (_loading) return const Center(child: CircularProgressIndicator());
     if (_error != null) return Center(child: Text(_error!, style: const TextStyle(color: RdcTheme.danger)));
 

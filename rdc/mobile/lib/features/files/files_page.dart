@@ -46,7 +46,9 @@ class FilesPage extends ConsumerStatefulWidget {
   ConsumerState<FilesPage> createState() => _FilesPageState();
 }
 
-class _FilesPageState extends ConsumerState<FilesPage> {
+class _FilesPageState extends ConsumerState<FilesPage> with AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => true;
   List<_FileNode> _rootNodes = [];
   bool _loading = true;
   String? _error;
@@ -164,6 +166,7 @@ class _FilesPageState extends ConsumerState<FilesPage> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     if (_loading) return const Center(child: CircularProgressIndicator());
     if (_error != null) return Center(child: Text('Erro: $_error', style: const TextStyle(color: RdcTheme.danger)));
 

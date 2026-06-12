@@ -210,6 +210,20 @@ TOOLS = [
             }
         }
     },
+    {
+        "type": "function",
+        "function": {
+            "name": "run_subagent",
+            "description": "Delega uma sub-tarefa complexa para outra instância do agente (recursividade). Útil para quebrar grandes problemas em partes menores e contornar limites de contexto ou passos.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "task": {"type": "string", "description": "Descrição detalhada e completa da tarefa que o sub-agente deve resolver"}
+                },
+                "required": ["task"]
+            }
+        }
+    },
 ]
 
 # ── Implementação das ferramentas ─────────────────────────────────────────────
@@ -432,6 +446,7 @@ def execute_tool(name: str, args: dict, project_path: str) -> str:  # noqa: C901
 async def run_prompt(
     project_path: str,
     prompt: str,
+    depth: int = 0,
 ) -> AsyncGenerator[str, None]:
     """
     Loop agêntico principal.
@@ -470,18 +485,28 @@ async def run_prompt(
     yield f"📁 Projeto: {os.path.basename(project_path)}\n\n"
 
     system = (
-        f"Você é o Antigravity, um engenheiro de software autônomo e expert.\n"
-        f"Projeto: {project_path}\n\n"
-        f"Suas responsabilidades:\n"
-        f"1. Entender o projeto usando list_directory e read_file antes de modificar.\n"
-        f"2. Buscar contexto com search_code antes de editar funções existentes.\n"
-        f"3. Usar write_file para aplicar as mudanças (SEMPRE o arquivo completo).\n"
-        f"4. Após editar, rodar comandos para validar (ex: testes, lint).\n"
-        f"5. Reportar claramente o que foi feito e por quê.\n\n"
-        f"Regras:\n"
-        f"- Nunca resuma código, sempre escreva o arquivo inteiro no write_file.\n"
-        f"- Prefira fazer uma coisa bem feita a várias coisas pela metade.\n"
-        f"- Sempre explique o raciocínio antes de editar."
+        f"<identity>\n"
+        f"You are Antigravity, a powerful agentic AI coding assistant designed by the Google Deepmind team working on Advanced Agentic Coding.\n"
+        f"You are pair programming with a USER to solve their coding task. The task may require creating a new codebase, modifying or debugging an existing codebase, or simply answering a question.\n"
+        f"</identity>\n\n"
+        f"Projeto atual: {project_path}\n\n"
+        f"CRITICAL INSTRUCTIONS / REGRAS CRÍTICAS:\n"
+        f"1. VOCÊ DEVE USAR AS FERRAMENTAS (como `write_file`) PARA CRIAR OU MODIFICAR ARQUIVOS. NUNCA envie o código completo no chat!\n"
+        f"2. NUNCA envie blocos de código gigantes na sua resposta de texto. A resposta de texto serve apenas para conversar com o usuário.\n"
+        f"3. Entenda o projeto usando `list_directory` e `read_file` antes de modificar.\n"
+        f"4. Ao usar `write_file`, NUNCA resuma o código; envie o arquivo COMPLETO.\n"
+        f"5. Após editar, valide usando `run_command` (ex: testes, lint).\n"
+        f"6. O usuário quer que você aja de forma autônoma para resolver a tarefa criando os arquivos necessários.\n\n"
+        f"<web_application_development>\n"
+        f"## Technology Stack\n"
+        f"1. **Core**: Use HTML for structure and Javascript for logic.\n"
+        f"2. **Styling (CSS)**: Use Vanilla CSS for maximum flexibility and control.\n"
+        f"3. **Web App**: If the USER specifies that they want a more complex web app, use a framework like Next.js or Vite.\n\n"
+        f"## Design Aesthetics\n"
+        f"1. **Use Rich Aesthetics**: Use best practices in modern web design (e.g. vibrant colors, dark modes, glassmorphism, and dynamic animations).\n"
+        f"2. **Prioritize Visual Excellence**: Avoid generic colors. Use modern typography. Use smooth gradients and micro-animations.\n"
+        f"3. **Use a Dynamic Design**: Achieve this with hover effects and interactive elements.\n"
+        f"</web_application_development>"
     )
 
     messages: list[dict] = [
@@ -555,9 +580,22 @@ async def run_prompt(
                     for k, v in func_args.items()
                     if k != "content"  # não exibe content do write_file
                 )
-                yield f"\n🛠️ [Agente] Executando: {func_name}({args_display})\n"
+                agent_label = "Agente" if depth == 0 else f"Agente Sub({depth})"
+                yield f"\n🛠️ [{agent_label}] Executando: {func_name}({args_display})\n"
 
-                result = execute_tool(func_name, func_args, project_path)
+                if func_name == "run_subagent":
+                    if depth >= 2:
+                        result = "❌ Limite de recursividade atingido (profundidade máxima: 2)."
+                    else:
+                        sub_task = func_args.get("task", "")
+                        yield f"\n🚀 Iniciando Sub-agente para: {sub_task[:50]}...\n"
+                        result = "Saída do Sub-agente:\n"
+                        async for sub_chunk in run_prompt(project_path, f"SUA TAREFA DELEGADA:\n{sub_task}\n\nResolva de forma autônoma e termine.", depth=depth + 1):
+                            yield sub_chunk
+                            result += sub_chunk
+                        yield f"\n✅ Sub-agente concluído.\n"
+                else:
+                    result = execute_tool(func_name, func_args, project_path)
 
                 # Log resumido do resultado
                 result_preview = result[:200] + ("...[ver saída completa]" if len(result) > 200 else "")

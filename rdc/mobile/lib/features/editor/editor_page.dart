@@ -24,7 +24,9 @@ class EditorPage extends StatefulWidget {
   State<EditorPage> createState() => _EditorPageState();
 }
 
-class _EditorPageState extends State<EditorPage> {
+class _EditorPageState extends State<EditorPage> with AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => true;
   final _ctrl = TextEditingController();
   final _undoHistory = <String>[];
   String _previousText = '';
@@ -118,6 +120,7 @@ class _EditorPageState extends State<EditorPage> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     if (widget.filePath == null) {
       return Center(
         child: Column(

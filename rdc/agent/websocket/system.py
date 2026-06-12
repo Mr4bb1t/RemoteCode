@@ -33,7 +33,7 @@ async def system_ws(
 
     try:
         while True:
-            info = get_system_info()
+            info = await asyncio.to_thread(get_system_info)
             await websocket.send_text(info.model_dump_json())
             await asyncio.sleep(interval)
     except WebSocketDisconnect:

@@ -25,6 +25,10 @@ from services.tls_service import ensure_tls_cert
 from websocket.logs import router as logs_ws_router
 from websocket.system import router as system_ws_router
 from websocket.terminal import router as terminal_ws_router
+from urllib.parse import urlparse
+from starlette.middleware.base import BaseHTTPMiddleware
+from fastapi import Request
+from api.preview import _proxy_request
 
 settings = get_settings()
 
@@ -48,6 +52,33 @@ app.add_middleware(
 )
 
 # Rotas
+class PreviewProxyMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next):
+        port = None
+        cookie_port = request.cookies.get("rdc_preview_port")
+        if cookie_port and cookie_port.isdigit():
+            port = int(cookie_port)
+            
+        if not port:
+            referer = request.headers.get("referer")
+            if referer:
+                parsed = urlparse(referer)
+                if "/api/preview/proxy/" in parsed.path:
+                    idx = parsed.path.find("/api/preview/proxy/")
+                    port_str = parsed.path[idx + len("/api/preview/proxy/"):].split("/")[0]
+                    if port_str.isdigit():
+                        port = int(port_str)
+
+        if port is not None:
+            if not request.url.path.startswith("/api/preview/proxy/") and not request.url.path.startswith("/api/") and not request.url.path.startswith("/ws/"):
+                target_path = request.url.path.lstrip("/")
+                try:
+                    return await _proxy_request(request, port, target_path)
+                except Exception:
+                    pass
+        return await call_next(request)
+
+app.add_middleware(PreviewProxyMiddleware)
 app.include_router(api_router)
 app.include_router(terminal_ws_router)
 app.include_router(logs_ws_router)

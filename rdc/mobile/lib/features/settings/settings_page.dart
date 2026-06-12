@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../core/api/api_client.dart';
 import '../../core/auth/auth_provider.dart';
 import '../../core/storage/secure_storage.dart';
 import '../../core/theme/app_theme.dart';
@@ -38,6 +39,11 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
         if (savedUrl != null && savedUrl.isNotEmpty) _urlController.text = savedUrl;
         _isLoggedIn = loggedIn;
       });
+    }
+
+    if (loggedIn && savedUrl != null && savedUrl.isNotEmpty) {
+      ApiClient.init(savedUrl);
+      if (mounted) context.go('/dashboard');
     }
   }
 
@@ -82,7 +88,11 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
 
     if (confirm == true) {
       await ref.read(authProvider.notifier).logout();
-      if (mounted) context.go('/');
+      if (mounted) {
+        setState(() {
+          _isLoggedIn = false;
+        });
+      }
     }
   }
 

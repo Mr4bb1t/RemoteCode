@@ -15,7 +15,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from auth.middleware import get_current_user
-from database import get_db
+from database import get_db, AsyncSessionLocal
 from models.antigravity import AntigravityRun
 from models.project import Project
 from schemas.antigravity import (
@@ -79,7 +79,7 @@ async def run_antigravity(
         files_changed = antigravity_service.detect_changed_files(path, output_log)
 
         # Atualizar banco (nova sessão para evitar conflito)
-        async with db.__class__(bind=db.get_bind()) as new_session:
+        async with AsyncSessionLocal() as new_session:
             r = await new_session.get(AntigravityRun, run_id)
             if r:
                 r.status = "success"

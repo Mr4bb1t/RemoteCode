@@ -50,6 +50,7 @@ async def _proxy_request(request: Request, port: int, path: str) -> Response:
 
     headers = dict(request.headers)
     headers.pop("host", None)
+    headers.pop("accept-encoding", None)
 
     body = await request.body()
 
@@ -63,12 +64,19 @@ async def _proxy_request(request: Request, port: int, path: str) -> Response:
     except httpx.ConnectError:
         raise HTTPException(status_code=502, detail=f"Não foi possível conectar na porta {port}")
 
-    return Response(
+    resp_headers = dict(resp.headers)
+    resp_headers.pop("content-encoding", None)
+    resp_headers.pop("content-length", None)
+    resp_headers.pop("transfer-encoding", None)
+
+    fastapi_resp = Response(
         content=resp.content,
         status_code=resp.status_code,
-        headers=dict(resp.headers),
+        headers=resp_headers,
         media_type=resp.headers.get("content-type"),
     )
+    fastapi_resp.set_cookie("rdc_preview_port", str(port), path="/")
+    return fastapi_resp
 
 
 @router.api_route("/proxy/{port}/{path:path}", methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"])

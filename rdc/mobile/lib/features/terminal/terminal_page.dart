@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../core/api/api_client.dart';
 import '../../core/api/ws_client.dart';
 import '../../core/theme/app_theme.dart';
 
@@ -17,7 +18,10 @@ class TerminalPage extends StatefulWidget {
   State<TerminalPage> createState() => _TerminalPageState();
 }
 
-class _TerminalPageState extends State<TerminalPage> {
+class _TerminalPageState extends State<TerminalPage> with AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => true;
+
   final _scrollController = ScrollController();
   final _inputController = TextEditingController();
   final _outputBuffer = StringBuffer();
@@ -26,7 +30,7 @@ class _TerminalPageState extends State<TerminalPage> {
   int _historyIndex = -1;
   WsClient? _ws;
   bool _connected = false;
-  String _selectedShell = 'powershell';
+  String _selectedShell = 'cmd';
   late String _sessionId;
 
   @override
@@ -36,11 +40,25 @@ class _TerminalPageState extends State<TerminalPage> {
     _connect();
   }
 
-  void _connect() {
+  Future<void> _connect() async {
     _ws?.disconnect();
+    
+    String? cwd;
+    try {
+      final res = await ApiClient.instance.get('/api/projects/${widget.projectId}');
+      if (res.statusCode == 200) {
+        cwd = res.data['path'] as String?;
+      }
+    } catch (_) {}
+
+    final queryParams = {'shell': _selectedShell};
+    if (cwd != null && cwd.isNotEmpty) {
+      queryParams['cwd'] = cwd;
+    }
+
     _ws = WsClient(
       path: '/ws/terminal/$_sessionId',
-      queryParams: {'shell': _selectedShell},
+      queryParams: queryParams,
       onMessage: (msg) {
         // Strip ANSI escape codes
         final cleanMsg = msg.replaceAll(RegExp(r'\x1B\[[0-?]*[ -/]*[@-~]'), '');
@@ -85,6 +103,7 @@ class _TerminalPageState extends State<TerminalPage> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     return Column(
       children: [
         // Toolbar

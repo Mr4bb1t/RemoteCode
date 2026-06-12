@@ -49,7 +49,7 @@ def _get_temperature() -> float | None:
 
 
 def get_system_info() -> SystemInfo:
-    cpu_percent = psutil.cpu_percent(interval=0.5)
+    cpu_percent = psutil.cpu_percent(interval=None)
     cpu_cores = psutil.cpu_count(logical=True)
 
     ram = psutil.virtual_memory()

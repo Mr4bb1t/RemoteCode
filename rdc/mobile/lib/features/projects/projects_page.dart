@@ -105,7 +105,34 @@ class _ProjectsPageState extends ConsumerState<ProjectsPage> {
             const SizedBox(height: 20),
             TextField(controller: _nameCtrl, decoration: const InputDecoration(labelText: 'Nome do Projeto'), style: const TextStyle(color: RdcTheme.textPrimary)),
             const SizedBox(height: 12),
-            TextField(controller: _pathCtrl, decoration: const InputDecoration(labelText: 'Caminho (ex: C:\\meu\\projeto)'), style: const TextStyle(color: RdcTheme.textPrimary)),
+            Row(
+              children: [
+                Expanded(
+                  child: TextField(controller: _pathCtrl, decoration: const InputDecoration(labelText: 'Caminho (ex: C:\\meu\\projeto)'), style: const TextStyle(color: RdcTheme.textPrimary)),
+                ),
+                const SizedBox(width: 8),
+                Container(
+                  decoration: BoxDecoration(
+                    color: RdcTheme.bg500,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: IconButton(
+                    icon: const Icon(Icons.more_horiz, color: RdcTheme.textPrimary),
+                    onPressed: () async {
+                      final selectedPath = await showDialog<String>(
+                        context: context,
+                        builder: (_) => const FolderBrowserDialog(),
+                      );
+                      if (selectedPath != null && selectedPath.isNotEmpty) {
+                        setState(() {
+                          _pathCtrl.text = selectedPath;
+                        });
+                      }
+                    },
+                  ),
+                ),
+              ],
+            ),
             const SizedBox(height: 12),
             TextField(controller: _langCtrl, decoration: const InputDecoration(labelText: 'Linguagem (opcional)'), style: const TextStyle(color: RdcTheme.textPrimary)),
             const SizedBox(height: 20),
@@ -247,6 +274,98 @@ class _ProjectCard extends StatelessWidget {
               ]),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class FolderBrowserDialog extends StatefulWidget {
+  const FolderBrowserDialog({super.key});
+
+  @override
+  State<FolderBrowserDialog> createState() => _FolderBrowserDialogState();
+}
+
+class _FolderBrowserDialogState extends State<FolderBrowserDialog> {
+  String _currentPath = '';
+  List<dynamic> _items = [];
+  bool _loading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadPath('');
+  }
+
+  Future<void> _loadPath(String path) async {
+    setState(() { _loading = true; _currentPath = path; });
+    try {
+      final res = await ApiClient.instance.get(
+        '/api/system/browse',
+        queryParameters: {'path': path},
+      );
+      if (res.statusCode == 200) {
+        setState(() { _items = res.data; });
+      }
+    } catch (_) {} finally {
+      if (mounted) setState(() { _loading = false; });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      backgroundColor: RdcTheme.bg700,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Selecionar Pasta', style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w700, color: RdcTheme.textPrimary)),
+            const SizedBox(height: 8),
+            Text(_currentPath.isEmpty ? 'Raiz do Sistema' : _currentPath, style: GoogleFonts.inter(fontSize: 12, color: RdcTheme.textSecondary)),
+            const SizedBox(height: 16),
+            Container(
+              height: 300,
+              decoration: BoxDecoration(
+                color: RdcTheme.bg900,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: RdcTheme.bg500),
+              ),
+              child: _loading
+                  ? const Center(child: CircularProgressIndicator())
+                  : ListView.builder(
+                      itemCount: _items.length,
+                      itemBuilder: (ctx, i) {
+                        final item = _items[i];
+                        return ListTile(
+                          leading: Icon(item['name'] == '..' ? Icons.drive_folder_upload : Icons.folder, color: RdcTheme.primary),
+                          title: Text(item['name'], style: GoogleFonts.inter(color: RdcTheme.textPrimary, fontSize: 13)),
+                          onTap: () => _loadPath(item['path']),
+                        );
+                      },
+                    ),
+            ),
+            const SizedBox(height: 16),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: const Text('Cancelar', style: TextStyle(color: RdcTheme.textMuted)),
+                ),
+                const SizedBox(width: 8),
+                ElevatedButton(
+                  onPressed: _currentPath.isEmpty ? null : () => Navigator.of(context).pop(_currentPath),
+                  style: ElevatedButton.styleFrom(backgroundColor: RdcTheme.primary),
+                  child: const Text('Selecionar', style: TextStyle(color: Colors.white)),
+                ),
+              ],
+            )
+          ],
         ),
       ),
     );

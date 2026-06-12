@@ -13,7 +13,9 @@ class TestsPage extends StatefulWidget {
   State<TestsPage> createState() => _TestsPageState();
 }
 
-class _TestsPageState extends State<TestsPage> {
+class _TestsPageState extends State<TestsPage> with AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => true;
   List<dynamic> _history = [];
   bool _running = false;
   String? _selectedRunner;
@@ -56,6 +58,7 @@ class _TestsPageState extends State<TestsPage> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     return Column(children: [
       // Runner selector + Run button
       Container(

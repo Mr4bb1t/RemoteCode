@@ -151,7 +151,13 @@ class DashboardPage extends ConsumerWidget {
                 ),
               ),
               const SizedBox(height: 8),
-              TextButton(onPressed: () => context.go('/settings'), child: const Text('Mudar URL / Agente')),
+              TextButton(
+                onPressed: () async {
+                  await ref.read(authProvider.notifier).logout();
+                  if (context.mounted) context.go('/settings');
+                }, 
+                child: const Text('Mudar URL / Agente'),
+              ),
             ],
           ),
         ),

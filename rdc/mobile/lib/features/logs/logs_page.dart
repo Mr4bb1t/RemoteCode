@@ -18,7 +18,9 @@ class LogsPage extends StatefulWidget {
   State<LogsPage> createState() => _LogsPageState();
 }
 
-class _LogsPageState extends State<LogsPage> {
+class _LogsPageState extends State<LogsPage> with AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => true;
   final _scroll = ScrollController();
   final _lines = <_LogLine>[];
   WsClient? _ws;
@@ -91,6 +93,7 @@ class _LogsPageState extends State<LogsPage> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     return Column(children: [
       // Quick commands
       Container(
