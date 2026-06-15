@@ -4,6 +4,8 @@
 
 O **Remote Dev Control (RDC)** é uma plataforma *self-hosted* de código aberto projetada para desenvolvedores que precisam de flexibilidade. Ele permite que você controle seus projetos, edite arquivos, gerencie repositórios Git e execute comandos de terminal diretamente do seu dispositivo móvel, sem depender de ferramentas de acesso remoto pesadas como AnyDesk ou TeamViewer.
 
+> **Aviso de Fork/Créditos:** Este projeto é um fork/branch expandido do incrível [MiMo Code](https://github.com/mimo-ai/mimocode). Agradecimentos especiais à equipe por fornecer a infraestrutura robusta do assistente de IA de linha de comando. Nós adaptamos e integramos o MiMo Code nativamente para permitir controle inteligente de código remoto via mobile.
+
 ---
 
 ## 🌟 Destaques do Projeto
@@ -12,25 +14,26 @@ O **Remote Dev Control (RDC)** é uma plataforma *self-hosted* de código aberto
 - **📱 App Mobile Nativo**: Interface fluida desenvolvida em **Flutter**, otimizada para produtividade em telas pequenas.
 - **🔐 Segurança em Primeiro Lugar**: Comunicação criptografada via **HTTPS (TLS/SSL)** e autenticação robusta via **JWT**.
 - **💻 Terminal em Tempo Real**: Sessões PTY reais com suporte a cores ANSI e persistência.
-- **🤖 Integração com IA (Antigravity)**: Assistente inteligente integrado para auxiliar no desenvolvimento via comandos de voz ou texto.
+- **🤖 Integração Nativa MiMo Code**: Assistente inteligente de IA (destaque para o `mimo-auto` gratuito) operando nos seus arquivos locais com acompanhamento e logs detalhados em tempo real.
 - **🌐 Preview Web**: Visualize suas aplicações web em desenvolvimento diretamente no celular.
 
 ---
 
 ## 🏗️ Arquitetura do Sistema
 
-O RDC é dividido em dois componentes principais que se comunicam via rede local (ou túneis):
+O RDC é dividido em três componentes principais que operam em conjunto:
 
-1.  **Agente Desktop (`/agent`)**: Roda na sua máquina principal (Windows/Linux). Gerencia o sistema de arquivos, executa processos e expõe a API.
-2.  **App Mobile (`/mobile`)**: A sua interface de controle. Conecta-se ao agente para fornecer uma experiência de IDE mobile.
+1.  **Agente Desktop (`/rdc/agent`)**: Roda na sua máquina principal (Windows/Linux). Gerencia o sistema de arquivos, executa processos, invoca o CLI do MiMo e expõe a API.
+2.  **App Mobile (`/rdc/mobile`)**: A sua interface de controle. Conecta-se ao agente para fornecer uma experiência de IDE mobile e delegar tarefas ao assistente de IA.
+3.  **MiMo CLI Customizado (`/MiMo-Code-main`)**: O core do assistente de IA no terminal, customizado nesta versão para dar prioridade de usabilidade ao modelo **MiMo Auto** (100% gratuito e auto-selecionável).
 
 ---
 
-## 🚀 Guia de Inalação e Configuração
+## 🚀 Guia de Instalação e Configuração
 
 ### 1. Preparando o Agente Desktop (Python)
 
-**Pré-requisitos:** Python 3.11 ou superior instalado.
+**Pré-requisitos:** Python 3.11+ e Node.js/npm (para rodar o CLI do MiMo).
 
 1.  Navegue até a pasta do agente:
     ```bash
@@ -53,9 +56,7 @@ O RDC é dividido em dois componentes principais que se comunicam via rede local
 4.  Configure as variáveis de ambiente:
     - Copie o arquivo `.env.example` para `.env`.
     - Defina sua `AGENT_PASSWORD` (mínimo 4 caracteres).
-    - *(Opcional)* Configure sua chave de API para o módulo Antigravity.
 5.  Inicie o Agente:
-    - **Com Interface Gráfica (GUI):** `python gui.py`
     - **Via Terminal (CLI):** `python main.py`
 
 ### 2. Preparando o App Mobile (Flutter)
@@ -76,6 +77,15 @@ O RDC é dividido em dois componentes principais que se comunicam via rede local
 
 ---
 
+## ✨ Recursos Adicionados Recentemente (Integração MiMo)
+
+- **MiMo Auto Nativo:** Acesso ao LLM autônomo totalmente **gratuito**, que entra em ação sem necessidade de configuração de API keys próprias (requer apenas login rápido pela TUI do mimo).
+- **UI do App Aprimorada:** O App Mobile (Flutter) agora destaca visualmente o modelo MiMo Auto (com badges e sem campos obrigatórios de chave) e faz sua pré-seleção lógica caso nenhuma API Key tenha sido adicionada, melhorando muito a usabilidade de onboarding.
+- **Streaming de Logs Detalhado (Stderr/Stdout):** O backend em Python agora intercepta e emite todos os passos em background do assistente. Erros críticos ou lógicas internas do MiMo-Code são transmitidas em tempo real para o usuário do celular, garantindo total transparência do que está ocorrendo na máquina remota.
+- **Auto-Fallbacks:** Ajustes nas ferramentas internas da TUI do CLI para sempre dar prioridade em invocar os modelos gratuitos de forma "zero-config", diminuindo o tempo de setup do agente de inteligência.
+
+---
+
 ## 🛠️ Funcionalidades Detalhadas
 
 | Módulo | Descrição | Tecnologia |
@@ -85,9 +95,8 @@ O RDC é dividido em dois componentes principais que se comunicam via rede local
 | **Editor** | Edição de código com Syntax Highlight para múltiplas linguagens. | `flutter_highlight` |
 | **Terminal** | Terminal interativo completo com suporte a múltiplas sessões. | `pywinpty` / `pty` |
 | **Git** | Interface para status, commit, push, pull e troca de branches. | `GitPython` |
-| **Testes** | Execução e acompanhamento de testes (Pytest, Jest, etc). | `subprocess` |
+| **Mimo Agent** | Interface móvel para invocação inteligente de comandos no código, visualização de diffs em tempo real e aprovação remota. | `mimo-code`, `asyncio` |
 | **Preview** | Visualização de apps web rodando em portas locais (Vite, React, etc). | `httpx` Proxy |
-| **Antigravity** | Assistente de IA para automação de tarefas de código. | `litellm` |
 
 ---
 
@@ -114,4 +123,4 @@ Contribuições são o que tornam a comunidade open source um lugar incrível pa
 Distribuído sob a licença MIT. Veja `LICENSE` para mais informações.
 
 ---
-Desenvolvido com ❤️ para a comunidade de desenvolvedores.
+Desenvolvido com ❤️ para a comunidade de desenvolvedores. Agradecimento especial aos engenheiros do MiMo Code por criar a base da IA.
