@@ -25,7 +25,6 @@ O RDC é dividido em três componentes principais que operam em conjunto:
 
 1.  **Agente Desktop (`/rdc/agent`)**: Roda na sua máquina principal (Windows/Linux). Gerencia o sistema de arquivos, executa processos, invoca o CLI do MiMo e expõe a API.
 2.  **App Mobile (`/rdc/mobile`)**: A sua interface de controle. Conecta-se ao agente para fornecer uma experiência de IDE mobile e delegar tarefas ao assistente de IA.
-3.  **MiMo CLI Customizado (`/MiMo-Code-main`)**: O core do assistente de IA no terminal, customizado nesta versão para dar prioridade de usabilidade ao modelo **MiMo Auto** (100% gratuito e auto-selecionável).
 
 ---
 
@@ -33,7 +32,7 @@ O RDC é dividido em três componentes principais que operam em conjunto:
 
 ### 1. Preparando o Agente Desktop (Python)
 
-**Pré-requisitos:** Python 3.11+ e Node.js/npm (para rodar o CLI do MiMo).
+**Pré-requisitos:** Python 3.11+ e Node.js/npm.
 
 1.  Navegue até a pasta do agente:
     ```bash
@@ -56,7 +55,16 @@ O RDC é dividido em três componentes principais que operam em conjunto:
 4.  Configure as variáveis de ambiente:
     - Copie o arquivo `.env.example` para `.env`.
     - Defina sua `AGENT_PASSWORD` (mínimo 4 caracteres).
-5.  Inicie o Agente:
+5.  Instale o CLI Oficial do MiMo Code globalmente:
+    ```bash
+    npm install -g @mimo-ai/cli
+    ```
+6.  Faça login no MiMo (necessário para liberar o plano gratuito MiMo Auto):
+    ```bash
+    mimo auth login
+    ```
+    *Selecione "MiMo Auto (free)" e siga as instruções no navegador.*
+7.  Inicie o Agente:
     - **Via Terminal (CLI):** `python main.py`
 
 ### 2. Preparando o App Mobile (Flutter)
