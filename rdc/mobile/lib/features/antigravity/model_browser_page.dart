@@ -32,15 +32,15 @@ const Map<ModelCategory, IconData> _categoryIcons = {
 // ── Provedores em destaque para a nav bar ───────────────────────────────────
 
 const List<Map<String, String>> _featuredProviders = [
-  {'name': 'Xiaomi', 'emoji': '🔶', 'color': '#FF6900'},
-  {'name': 'Anthropic', 'emoji': '🧠', 'color': '#D4A27F'},
-  {'name': 'Google', 'emoji': '🔮', 'color': '#4285F4'},
-  {'name': 'OpenAI', 'emoji': '🤖', 'color': '#10A37F'},
-  {'name': 'xAI', 'emoji': '⚡', 'color': '#1DA1F2'},
-  {'name': 'DeepSeek', 'emoji': '🐋', 'color': '#4F6EF7'},
-  {'name': 'Meta', 'emoji': '🦙', 'color': '#0668E1'},
-  {'name': 'Mistral', 'emoji': '🌀', 'color': '#FF7000'},
-  {'name': 'Qwen', 'emoji': '🔮', 'color': '#6C5CE7'},
+  {'name': 'Xiaomi', 'emoji': 'M', 'color': '#FF6900'},
+  {'name': 'Anthropic', 'emoji': 'A', 'color': '#D4A27F'},
+  {'name': 'Google', 'emoji': 'G', 'color': '#4285F4'},
+  {'name': 'OpenAI', 'emoji': 'O', 'color': '#10A37F'},
+  {'name': 'xAI', 'emoji': 'X', 'color': '#1DA1F2'},
+  {'name': 'DeepSeek', 'emoji': 'D', 'color': '#4F6EF7'},
+  {'name': 'Meta', 'emoji': 'L', 'color': '#0668E1'},
+  {'name': 'Mistral', 'emoji': 'Mi', 'color': '#FF7000'},
+  {'name': 'Qwen', 'emoji': 'Q', 'color': '#6C5CE7'},
 ];
 
 // ── Página principal ────────────────────────────────────────────────────────
@@ -131,7 +131,6 @@ class _ModelBrowserPageState extends State<ModelBrowserPage> {
     final hasSavedKey = _savedIds.contains(model.id);
 
     if (hasSavedKey) {
-      // Já tem key salva — seleciona direto
       final saved = await SecureStorage.getSavedModel(model.id);
       await SecureStorage.setAiModel(model.id);
       if (saved != null && saved.apiKey.isNotEmpty) {
@@ -148,14 +147,17 @@ class _ModelBrowserPageState extends State<ModelBrowserPage> {
       return;
     }
 
-    final needsKey = model.category != 'mimo' && model.category != 'local';
+    // Todos os MiMo são gratuitos — verificar pelo ID do provider
+    final isMimoFree = model.id.toLowerCase().contains('xiaomi') ||
+                       model.id.toLowerCase().contains('mimo');
+    final isLocal = model.category == 'local';
+    final needsKey = !isMimoFree && !isLocal;
 
     if (needsKey) {
       final key = await _showApiKeyDialog(model);
       if (key == null) return;
       await SecureStorage.setAiModel(model.id);
       await SecureStorage.setAiApiKey(key);
-      // Salvar permanentemente
       await SecureStorage.saveModelConfig(SavedModel(
         id: model.id, name: model.name, provider: model.provider,
         logoAsset: model.logoAsset,
@@ -303,9 +305,18 @@ class _ModelBrowserPageState extends State<ModelBrowserPage> {
 
   AiModelInfo? get _mimoV25 {
     try {
-      return _allModels.firstWhere((m) => m.id.contains('mimo-v2.5') && !m.id.contains('tts'));
+      // Priorizar o modelo "auto" (base) — sem sufixo pro/tts
+      return _allModels.firstWhere((m) =>
+          m.id.contains('mimo-v2.5') &&
+          !m.id.contains('tts') &&
+          !m.id.contains('pro') &&
+          !m.id.contains('omni'));
     } catch (_) {
-      return _mimoModels.isNotEmpty ? _mimoModels.first : null;
+      try {
+        return _allModels.firstWhere((m) => m.id.contains('mimo-v2.5') && !m.id.contains('tts'));
+      } catch (_) {
+        return _mimoModels.isNotEmpty ? _mimoModels.first : null;
+      }
     }
   }
 
@@ -390,7 +401,7 @@ class _ModelBrowserPageState extends State<ModelBrowserPage> {
               child: ListView(
                 scrollDirection: Axis.horizontal,
                 children: [
-                  _providerNavChip(null, 'Todos', '📋', '#888888'),
+                  _providerNavChip(null, 'Todos', 'T', '#888888'),
                   ..._featuredProviders.map((p) =>
                     _providerNavChip(p['name']!, p['name']!, p['emoji']!, p['color']!)),
                 ],
@@ -496,7 +507,7 @@ class _ModelBrowserPageState extends State<ModelBrowserPage> {
     );
   }
 
-  Widget _providerNavChip(String? value, String label, String emoji, String colorHex) {
+  Widget _providerNavChip(String? value, String label, String letter, String colorHex) {
     final isSelected = _navProvider == value;
     final color = Color(int.parse(colorHex.replaceFirst('#', 'FF'), radix: 16));
     return Padding(
@@ -515,7 +526,13 @@ class _ModelBrowserPageState extends State<ModelBrowserPage> {
             border: Border.all(color: isSelected ? color : RdcTheme.bg600, width: isSelected ? 2 : 1),
           ),
           child: Row(mainAxisSize: MainAxisSize.min, children: [
-            Text(emoji, style: const TextStyle(fontSize: 14)),
+            Container(
+              width: 20, height: 20,
+              decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(4)),
+              child: Center(
+                child: Text(letter, style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.w800, color: Colors.white)),
+              ),
+            ),
             const SizedBox(width: 6),
             Text(label,
                 style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600,
@@ -564,7 +581,7 @@ class _HeroMiMoCard extends StatelessWidget {
                 color: const Color(0xFFFF6900).withOpacity(0.2),
                 borderRadius: BorderRadius.circular(14),
               ),
-              child: const Text('🔶', style: TextStyle(fontSize: 24)),
+              child: const Icon(Icons.bolt, color: Color(0xFFFF6900), size: 24),
             ),
             const SizedBox(width: 12),
             Expanded(

@@ -33,7 +33,7 @@ class SavedModel {
 
   factory SavedModel.fromJson(Map<String, dynamic> j) => SavedModel(
     id: j['id'] ?? '', name: j['name'] ?? '', provider: j['provider'] ?? '',
-    logoAsset: j['logoAsset'] ?? '🤖', colorHex: j['colorHex'] ?? '#10A37F',
+    logoAsset: j['logoAsset'] ?? 'M', colorHex: j['colorHex'] ?? '#10A37F',
     keyUrl: j['keyUrl'] ?? '', keyHint: j['keyHint'] ?? '',
     category: j['category'] ?? 'api', apiKey: j['apiKey'] ?? '',
   );

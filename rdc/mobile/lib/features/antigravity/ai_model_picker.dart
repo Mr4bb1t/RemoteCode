@@ -43,7 +43,7 @@ class AiModelInfo {
       id: json['id'] ?? '',
       name: json['name'] ?? '',
       provider: json['provider'] ?? '',
-      logoAsset: json['logoAsset'] ?? '🤖',
+      logoAsset: json['logoAsset'] ?? 'M',
       color: _parseColor(json['color'] ?? '#10A37F'),
       keyUrl: json['keyUrl'] ?? '',
       keyHint: json['keyHint'] ?? 'API Key',
@@ -94,9 +94,9 @@ Future<List<AiModelInfo>> fetchModelsFromApi() async {
   // Fallback se API falhou
   if (apiModels.isEmpty) {
     apiModels = [
-      AiModelInfo(id: 'google/gemini-2.5-flash', name: 'Gemini 2.5 Flash', provider: 'Google', logoAsset: '🔮', color: const Color(0xFF4285F4), keyUrl: 'https://aistudio.google.com/apikey', keyHint: 'AIzaSy...'),
-      AiModelInfo(id: 'google/gemini-2.5-pro', name: 'Gemini 2.5 Pro', provider: 'Google', logoAsset: '🌟', color: const Color(0xFF34A853), keyUrl: 'https://aistudio.google.com/apikey', keyHint: 'AIzaSy...'),
-      AiModelInfo(id: 'openai/gpt-4o-mini', name: 'GPT-4o Mini', provider: 'OpenAI', logoAsset: '⚡', color: const Color(0xFF10A37F), keyUrl: 'https://platform.openai.com/api-keys', keyHint: 'sk-proj-...'),
+      AiModelInfo(id: 'google/gemini-2.5-flash', name: 'Gemini 2.5 Flash', provider: 'Google', logoAsset: 'G', color: const Color(0xFF4285F4), keyUrl: 'https://aistudio.google.com/apikey', keyHint: 'AIzaSy...'),
+      AiModelInfo(id: 'google/gemini-2.5-pro', name: 'Gemini 2.5 Pro', provider: 'Google', logoAsset: 'G', color: const Color(0xFF34A853), keyUrl: 'https://aistudio.google.com/apikey', keyHint: 'AIzaSy...'),
+      AiModelInfo(id: 'openai/gpt-4o-mini', name: 'GPT-4o Mini', provider: 'OpenAI', logoAsset: 'O', color: const Color(0xFF10A37F), keyUrl: 'https://platform.openai.com/api-keys', keyHint: 'sk-proj-...'),
     ];
   }
 
@@ -196,8 +196,8 @@ class _AiModelPickerSheetState extends State<_AiModelPickerSheet> {
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: Text(_isFreeModel
-              ? '✅ MiMo Auto (gratuito) configurado!'
-              : '✅ Modelo de IA configurado!'),
+              ? 'MiMo Auto (gratuito) configurado!'
+              : 'Modelo de IA configurado!'),
           backgroundColor: RdcTheme.success,
         ));
       }
@@ -208,7 +208,7 @@ class _AiModelPickerSheetState extends State<_AiModelPickerSheet> {
       if (mounted) {
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text('✅ Configuração salva localmente.'),
+          content: Text('Configuracao salva localmente.'),
           backgroundColor: RdcTheme.success,
         ));
       }

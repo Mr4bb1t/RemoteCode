@@ -63,12 +63,16 @@ class _AntigravityPageState extends State<AntigravityPage> with AutomaticKeepAli
   final _scrollCtrl = ScrollController();
   final List<_ChatMsg> _msgs = [];
   bool _running = false;
+  bool _stopRequested = false;
   String _aiModelName = 'Nenhum modelo';
 
   // Mensagem da IA sendo construída ao vivo
   final _aiBuffer = StringBuffer();
   int? _liveRunId;
   List<String> _liveFiles = [];
+
+  // HTTP client para poder cancelar
+  http_io.IOClient? _activeClient;
 
   // Ferramentas disponíveis no Mimo
   List<Map<String, String>> _tools = [];
@@ -173,19 +177,19 @@ class _AntigravityPageState extends State<AntigravityPage> with AutomaticKeepAli
           }
           
           if (status == 'approved') {
-            historyMsgs.add(_ChatMsg(role: _MsgRole.system, text: '✅ Alterações aplicadas', runId: runId));
+            historyMsgs.add(_ChatMsg(role: _MsgRole.system, text: 'Alteracoes aplicadas', runId: runId));
           } else if (status == 'rejected') {
-            historyMsgs.add(_ChatMsg(role: _MsgRole.system, text: '🔄 Alterações revertidas', runId: runId));
+            historyMsgs.add(_ChatMsg(role: _MsgRole.system, text: 'Alteracoes revertidas', runId: runId));
           } else if (files.isNotEmpty && status == 'success') {
             historyMsgs.add(_ChatMsg(
               role: _MsgRole.system,
-              text: '✅ Concluído em ${elapsed}s · ${files.length} arquivo(s) modificado(s)',
+              text: 'Concluido em ${elapsed}s | ${files.length} arquivo(s) modificado(s)',
               runId: runId,
               filesChanged: files,
               canApprove: true,
             ));
           } else if (status == 'error') {
-            historyMsgs.add(_ChatMsg(role: _MsgRole.system, text: '❌ Erro na execução', runId: runId));
+            historyMsgs.add(_ChatMsg(role: _MsgRole.system, text: '[ERRO] Execucao', runId: runId));
           }
         }
 
@@ -199,7 +203,26 @@ class _AntigravityPageState extends State<AntigravityPage> with AutomaticKeepAli
     } catch (_) {}
   }
 
-  // ── Undo: remove último par user+ai ────────────────────────────────────────
+  // ── Parar agente ──────────────────────────────────────────────────────────
+
+  void _stopAgent() {
+    if (!_running) return;
+    _stopRequested = true;
+    _activeClient?.close();
+    _activeClient = null;
+
+    setState(() {
+      _running = false;
+      if (_aiBuffer.isNotEmpty) {
+        _msgs.add(_ChatMsg(role: _MsgRole.ai, text: _aiBuffer.toString().trim()));
+        _aiBuffer.clear();
+      }
+      _msgs.add(_ChatMsg(role: _MsgRole.system, text: 'Interrompido pelo usuario'));
+    });
+    _scrollToBottom();
+  }
+
+  // ── Undo: remove ultimo par user+ai ────────────────────────────────────────
 
   Future<void> _undo() async {
     if (_running || _msgs.isEmpty) return;
@@ -237,6 +260,7 @@ class _AntigravityPageState extends State<AntigravityPage> with AutomaticKeepAli
     if (prompt.isEmpty) return;
     _promptCtrl.clear();
 
+    _stopRequested = false;
     setState(() {
       _running = true;
       _msgs.add(_ChatMsg(role: _MsgRole.user, text: prompt));
@@ -263,15 +287,16 @@ class _AntigravityPageState extends State<AntigravityPage> with AutomaticKeepAli
       });
 
       final httpClient = HttpClient()..badCertificateCallback = (cert, host, port) => true;
-      final client = http_io.IOClient(httpClient);
-      final response = await client.send(request);
+      _activeClient = http_io.IOClient(httpClient);
+      final response = await _activeClient!.send(request);
 
-      // Índice da mensagem AI atual (para atualizar in-place)
       int? _aiMsgIndex;
       int? _toolMsgIndex;
 
       await for (final chunk in response.stream.transform(utf8.decoder)) {
+        if (_stopRequested) break;
         for (final line in chunk.split('\n')) {
+          if (_stopRequested) break;
           if (!line.startsWith('data: ')) continue;
           try {
             final data = jsonDecode(line.substring(6));
@@ -284,9 +309,17 @@ class _AntigravityPageState extends State<AntigravityPage> with AutomaticKeepAli
               final text = (data['line'] as String?)?.replaceAll('\\n', '\n') ?? '';
               if (text.trim().isEmpty) continue;
 
+              // Filtrar ruído do sistema
+              final lower = text.toLowerCase();
+              if (lower.contains('api key') || lower.contains('api_key') ||
+                  lower.contains('chave') || lower.contains('configura') ||
+                  lower.contains('selecionado') || lower.contains('grátis') ||
+                  lower.contains('mimo engine') || lower.contains('modelo:') ||
+                  lower.contains('projeto:')) continue;
+
               setState(() {
                 // Tool call — mensagem separada
-                if (text.contains('Executando:') || text.contains('🔍') || text.contains('📄') || text.contains('✏️') || text.contains('⚙️') || text.contains('🧠')) {
+                if (text.contains('Executando:') || text.contains('[SEARCH]') || text.contains('[WRITE]') || text.contains('[EDIT]') || text.contains('[RUN]') || text.contains('[AI-SEARCH]')) {
                   // Finalizar msg AI anterior se existir
                   if (_aiMsgIndex != null && _aiBuffer.isNotEmpty) {
                     final idx = _aiMsgIndex!;
@@ -298,7 +331,7 @@ class _AntigravityPageState extends State<AntigravityPage> with AutomaticKeepAli
                   }
                   _msgs.add(_ChatMsg(role: _MsgRole.tool, text: text.trim()));
                   _toolMsgIndex = _msgs.length - 1;
-                } else if (text.startsWith('💭')) {
+                } else if (text.contains('[REASONING]') || text.contains('[PENSANDO]')) {
                   // Reasoning — mensagem separada
                   if (_aiMsgIndex != null && _aiBuffer.isNotEmpty) {
                     final idx = _aiMsgIndex!;
@@ -308,8 +341,8 @@ class _AntigravityPageState extends State<AntigravityPage> with AutomaticKeepAli
                     _aiBuffer.clear();
                     _aiMsgIndex = null;
                   }
-                  _msgs.add(_ChatMsg(role: _MsgRole.reasoning, text: text.replaceFirst('💭', '').trim()));
-                } else if (text.startsWith('❌') || text.startsWith('⚠️')) {
+                  _msgs.add(_ChatMsg(role: _MsgRole.reasoning, text: text.replaceAll(RegExp(r'\[REASONING\]|\[PENSANDO\]'), '').trim()));
+                } else if (text.startsWith('[ERRO]') || text.startsWith('[AVISO]')) {
                   // Erro/aviso — mensagem de sistema
                   if (_aiMsgIndex != null && _aiBuffer.isNotEmpty) {
                     final idx = _aiMsgIndex!;
@@ -367,11 +400,11 @@ class _AntigravityPageState extends State<AntigravityPage> with AutomaticKeepAli
                 final fileNames = fileCount > 0
                     ? files.map((f) => f.split(RegExp(r'[/\\]')).last).take(3).join(', ')
                     : '';
-                String summary = '✅ Concluído em ${elapsed}s';
+                String summary = 'Concluido em ${elapsed}s';
                 if (fileCount > 0) {
-                  summary += ' · $fileCount arquivo${fileCount > 1 ? "s" : ""} modificado${fileCount > 1 ? "s" : ""}';
-                  if (fileCount <= 3) summary += '\n📄 $fileNames';
-                  else if (fileCount > 3) summary += '\n📄 $fileNames... +${fileCount - 3}';
+                  summary += ' | $fileCount arquivo${fileCount > 1 ? "s" : ""} modificado${fileCount > 1 ? "s" : ""}';
+                  if (fileCount <= 3) summary += '\n  $fileNames';
+                  else if (fileCount > 3) summary += '\n  $fileNames... +${fileCount - 3}';
                 }
 
                 _msgs.add(_ChatMsg(
@@ -386,7 +419,7 @@ class _AntigravityPageState extends State<AntigravityPage> with AutomaticKeepAli
 
             } else if (type == 'error') {
               setState(() {
-                _msgs.add(_ChatMsg(role: _MsgRole.system, text: '❌ ${data['message']}'));
+                _msgs.add(_ChatMsg(role: _MsgRole.system, text: '[ERRO] ${data['message']}'));
               });
             }
           } catch (_) {}
@@ -394,11 +427,12 @@ class _AntigravityPageState extends State<AntigravityPage> with AutomaticKeepAli
       }
     } catch (e) {
       setState(() {
-        _msgs.add(_ChatMsg(role: _MsgRole.system, text: '❌ Erro de conexão: $e'));
+        _msgs.add(_ChatMsg(role: _MsgRole.system, text: '[ERRO] Conexao: $e'));
       });
     } finally {
-      // Flush buffer
-      if (_aiBuffer.isNotEmpty) {
+      _activeClient?.close();
+      _activeClient = null;
+      if (_aiBuffer.isNotEmpty && !_stopRequested) {
         setState(() {
           _msgs.add(_ChatMsg(role: _MsgRole.ai, text: _aiBuffer.toString().trim()));
           _aiBuffer.clear();
@@ -431,7 +465,7 @@ class _AntigravityPageState extends State<AntigravityPage> with AutomaticKeepAli
       });
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(approve ? '✅ Alterações aplicadas' : '🔄 Alterações revertidas'),
+        content: Text(approve ? 'Alteracoes aplicadas' : 'Alteracoes revertidas'),
         backgroundColor: approve ? RdcTheme.success : RdcTheme.danger,
       ));
     } catch (e) {
@@ -561,6 +595,12 @@ class _AntigravityPageState extends State<AntigravityPage> with AutomaticKeepAli
               style: GoogleFonts.inter(
                   fontSize: 15, fontWeight: FontWeight.w700, color: RdcTheme.textPrimary)),
           const Spacer(),
+          if (_running)
+            IconButton(
+              icon: const Icon(Icons.stop_circle, color: RdcTheme.danger, size: 22),
+              tooltip: 'Parar agente',
+              onPressed: _stopAgent,
+            ),
           if (_msgs.isNotEmpty && !_running)
             IconButton(
               icon: const Icon(Icons.undo, color: RdcTheme.textMuted, size: 20),
@@ -871,7 +911,7 @@ class _SystemMsg extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isError = msg.text.startsWith('❌');
+    final isError = msg.text.startsWith('[ERRO]');
     final hasFiles = msg.filesChanged.isNotEmpty;
 
     return Container(

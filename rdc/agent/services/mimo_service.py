@@ -49,7 +49,7 @@ async def run_prompt(
     api_key = os.environ.get("AI_API_KEY", current_settings.ai_api_key)
 
     # Início limpo — sem linhas de sistema
-    yield f"🤖 Usando {model}\n"
+    pass
 
     # Variáveis de ambiente para provedores
     _provider_env = {
@@ -81,30 +81,10 @@ async def run_prompt(
 
     # ── Logs de diagnóstico detalhados ────────────────────────────────────────
     yield "\n──────────────────────────────────────────────────\n"
-    yield f"🔍 Bin: {mimo_path}\n"
-    yield f"🧠 Modelo: {model}\n"
-    yield f"📂 Projeto: {project_path}\n"
-    # Mostra vars de ambiente relevantes (sem expor chave completa)
-    for env_var in ("XIAOMI_API_KEY", "GEMINI_API_KEY", "OPENAI_API_KEY", "ANTHROPIC_API_KEY",
-                    "DEEPSEEK_API_KEY", "MISTRAL_API_KEY", "COHERE_API_KEY", "XAI_API_KEY"):
-        val = env.get(env_var, "")
-        if val:
-            masked = val[:6] + "..." if len(val) > 6 else "(set)"
-            yield f"🔑 {env_var}: {masked}\n"
-
-    # Comando: mimo run --dir <project_path> --model <model> --format json --dangerously-skip-permissions "<prompt>"
-    cmd = [
-        mimo_path,
-        "run",
-        "--dir", str(project_path),
-        "--model", model,
-        "--format", "json",
-        "--dangerously-skip-permissions",
-        prompt,
-    ]
-    cmd_display = " ".join(cmd[:8]) + " ..."
-    yield f"⚙️ Comando: {cmd_display}\n"
-    yield "──────────────────────────────────────────────────\n\n"
+    yield f"Bin: {mimo_path}\n"
+    # Header limpo sem emojis
+    yield f"Modelo: {model}\n"
+    yield f"Projeto: {os.path.basename(project_path)}\n\n"
 
     stderr_lines: list[str] = []
 
@@ -133,7 +113,7 @@ async def run_prompt(
 
         stderr_task = asyncio.create_task(_read_stderr())
 
-        yield "🚀 Iniciando execução...\n\n"
+        yield "Iniciando execucao...\n\n"
 
         async def _drain_stderr():
             """Emite todas as linhas de stderr pendentes na fila sem bloquear."""
@@ -173,7 +153,7 @@ async def run_prompt(
                     if reasoning:
                         clean = _sanitize_ai_text(reasoning)
                         if clean:
-                            yield f"💭 {clean}\n"
+                            yield f"  {clean}\n"
 
                 elif ev_type == "tool_use":
                     part = event.get("part", {})
@@ -195,7 +175,7 @@ async def run_prompt(
                             yield f"   {preview}\n"
                     elif status == "error":
                         error = state.get("error", "Erro desconhecido")
-                        yield f"   ❌ {error}\n"
+                        yield f"   [ERRO] {error}\n"
 
                 elif ev_type == "error":
                     err_val = event.get("error", "Erro interno")
@@ -203,7 +183,7 @@ async def run_prompt(
                         error_msg = err_val.get("message", "Erro interno")
                     else:
                         error_msg = str(err_val)
-                    yield f"\n❌ {error_msg}\n"
+                    yield f"\n[ERRO] {error_msg}\n"
 
                 else:
                     # Evento desconhecido — ignora
@@ -230,16 +210,16 @@ async def run_prompt(
 
         if process.returncode != 0:
             if stderr_lines:
-                yield f"\n⚠️ Erro (código {process.returncode}):\n"
+                yield f"\n[ERRO] Codigo {process.returncode}:\n"
                 for err_line in stderr_lines[-5:]:
                     yield f"  {err_line}\n"
             else:
-                yield f"\n⚠️ Processo finalizou com código {process.returncode}\n"
+                yield f"\n[AVISO] Processo finalizou com codigo {process.returncode}\n"
 
     except FileNotFoundError:
-        yield "\n❌ Mimo CLI não encontrado. Instale com: npm install -g @mimo-ai/cli\n"
+        yield "\n[ERRO] Mimo CLI nao encontrado. Instale com: npm install -g @mimo-ai/cli\n"
     except Exception as e:
-        yield f"\n❌ Erro: {str(e)}\n"
+        yield f"\n[ERRO] {str(e)}\n"
 
 def _sanitize_line(line: str) -> str:
     """Remove ruído do sistema e formata saída para exibição limpa."""
@@ -248,12 +228,17 @@ def _sanitize_line(line: str) -> str:
         return ""
     
     # Padrões de ruído para filtrar
-    _NOISE_PREFIXES = (
+    _NOISE_PATTERNS = (
         "Warning:", "Note:", "info ", "█", "⠀", "Reading",
         "Resolving", "Downloading", "Got ", "Progress:",
         "Packages:", "npm warn", "npm notice", "added ",
+        "Mimo Engine", "Modelo:", "Projeto:", "API Key",
+        "api_key", "Chave", "configura", "Configura",
+        " Selecionado", "selecionado", "GRÁTIS",
     )
-    if any(line.startswith(p) for p in _NOISE_PREFIXES):
+    if any(p in line for p in _NOISE_PATTERNS):
+        return ""
+    if any(line.startswith(p) for p in ("Warning:", "Note:", "info ", "█", "⠀")):
         return ""
     
     # Remover timestamps e códigos ANSI
@@ -264,24 +249,24 @@ def _sanitize_line(line: str) -> str:
     return line
 
 
+_TOOL_LABELS = {
+    "read": "[READ]",
+    "write": "[WRITE]",
+    "edit": "[EDIT]",
+    "glob": "[SEARCH]",
+    "grep": "[FIND]",
+    "bash": "[RUN]",
+    "codesearch": "[AI-SEARCH]",
+    "websearch": "[WEB]",
+    "webfetch": "[FETCH]",
+    "actor": "[AGENT]",
+    "skill": "[SKILL]",
+    "memory": "[MEMORY]",
+    "task": "[TASK]",
+}
+
 def _format_tool_output(tool_name: str, inputs: dict, output: str) -> str:
     """Formata saída de tool de forma limpa e legível."""
-    _TOOL_LABELS = {
-        "read": "📄 Lendo",
-        "write": "✏️ Criando",
-        "edit": "✏️ Editando",
-        "glob": "🔍 Buscando arquivos",
-        "grep": "🔍 Buscando em código",
-        "bash": "⚙️ Executando",
-        "codesearch": "🧠 Pesquisando",
-        "websearch": "🌐 Pesquisando na web",
-        "webfetch": "📥 Baixando",
-        "actor": "🤖 Delegando",
-        "skill": "📚 Carregando",
-        "memory": "🧠 Memória",
-        "task": "📋 Tarefa",
-    }
-    
     label = _TOOL_LABELS.get(tool_name, f"🔧 {tool_name}")
     
     # Simplificar display baseado no tool
@@ -314,12 +299,21 @@ def _sanitize_ai_text(text: str) -> str:
     lines = text.split("\n")
     clean = []
     
+    _SYSTEM_NOISE = (
+        "API Key", "api_key", "Chave", "configura", "Configura",
+        "Mimo Engine", "Modelo:", "Projeto:", "Selecionado", "selecionado",
+        "GRÁTIS", "gratuito", "Free", "free",
+    )
+    
     for line in lines:
         stripped = line.strip()
         
-        # Pular linhas de ruído
         if not stripped:
             clean.append("")
+            continue
+        
+        # Pular linhas de ruído
+        if any(p in stripped for p in _SYSTEM_NOISE):
             continue
         if any(stripped.startswith(p) for p in _NOISE_PREFIXES if 'import' not in p):
             continue
