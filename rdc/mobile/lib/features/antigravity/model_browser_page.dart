@@ -147,9 +147,8 @@ class _ModelBrowserPageState extends State<ModelBrowserPage> {
       return;
     }
 
-    // Todos os MiMo são gratuitos — verificar pelo ID do provider
-    final isMimoFree = model.id.toLowerCase().contains('xiaomi') ||
-                       model.id.toLowerCase().contains('mimo');
+    // Apenas o mimo-auto é gratuito — todos os outros MiMo precisam de API key
+    final isMimoFree = model.id == 'mimo/mimo-auto';
     final isLocal = model.category == 'local';
     final needsKey = !isMimoFree && !isLocal;
 
@@ -303,19 +302,24 @@ class _ModelBrowserPageState extends State<ModelBrowserPage> {
 
   List<AiModelInfo> get _mimoModels => _allModels.where((m) => m.category == 'mimo').toList();
 
-  AiModelInfo? get _mimoV25 {
+  AiModelInfo? get _featuredModel {
     try {
-      // Priorizar o modelo "auto" (base) — sem sufixo pro/tts
-      return _allModels.firstWhere((m) =>
-          m.id.contains('mimo-v2.5') &&
-          !m.id.contains('tts') &&
-          !m.id.contains('pro') &&
-          !m.id.contains('omni'));
+      // Priorizar o MiMo Auto (gratuito e padrão)
+      return _allModels.firstWhere((m) => m.id == 'mimo/mimo-auto');
     } catch (_) {
       try {
-        return _allModels.firstWhere((m) => m.id.contains('mimo-v2.5') && !m.id.contains('tts'));
+        // Fallback: Priorizar o modelo "auto" (base) — sem sufixo pro/tts
+        return _allModels.firstWhere((m) =>
+            m.id.contains('mimo-v2.5') &&
+            !m.id.contains('tts') &&
+            !m.id.contains('pro') &&
+            !m.id.contains('omni'));
       } catch (_) {
-        return _mimoModels.isNotEmpty ? _mimoModels.first : null;
+        try {
+          return _allModels.firstWhere((m) => m.id.contains('mimo-v2.5') && !m.id.contains('tts'));
+        } catch (_) {
+          return _mimoModels.isNotEmpty ? _mimoModels.first : null;
+        }
       }
     }
   }
@@ -324,7 +328,7 @@ class _ModelBrowserPageState extends State<ModelBrowserPage> {
   Widget build(BuildContext context) {
     final grouped = _groupByProvider(_filtered);
     final providers = grouped.keys.toList()..sort();
-    final featured = _mimoV25;
+    final featured = _featuredModel;
     final mimoCount = _allModels.where((m) => m.category == 'mimo').length;
     final popularCount = _allModels.where((m) => m.category == 'popular').length;
     final localCount = _allModels.where((m) => m.category == 'local').length;
@@ -561,15 +565,18 @@ class _HeroMiMoCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final accentColor = model.color;
+    final isMimoAuto = model.id == 'mimo/mimo-auto';
+
     return Container(
       margin: const EdgeInsets.fromLTRB(12, 12, 12, 4),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [const Color(0xFFFF6900).withOpacity(0.15), const Color(0xFFFF6900).withOpacity(0.05)],
+          colors: [accentColor.withOpacity(0.15), accentColor.withOpacity(0.05)],
           begin: Alignment.topLeft, end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFFFF6900).withOpacity(0.3)),
+        border: Border.all(color: accentColor.withOpacity(0.3)),
       ),
       child: Column(children: [
         Padding(
@@ -578,16 +585,18 @@ class _HeroMiMoCard extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: const Color(0xFFFF6900).withOpacity(0.2),
+                color: accentColor.withOpacity(0.2),
                 borderRadius: BorderRadius.circular(14),
               ),
-              child: const Icon(Icons.bolt, color: Color(0xFFFF6900), size: 24),
+              child: isMimoAuto
+                  ? const Text('✨', style: TextStyle(fontSize: 24))
+                  : Icon(Icons.bolt, color: accentColor, size: 24),
             ),
             const SizedBox(width: 12),
             Expanded(
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 Row(children: [
-                  Text('MiMo V2.5',
+                  Text(model.name,
                       style: GoogleFonts.inter(fontSize: 17, fontWeight: FontWeight.w800, color: RdcTheme.textPrimary)),
                   const SizedBox(width: 8),
                   Container(
@@ -597,8 +606,12 @@ class _HeroMiMoCard extends StatelessWidget {
                   ),
                 ]),
                 const SizedBox(height: 2),
-                Text('Modelo principal — sem necessidade de API Key',
-                    style: GoogleFonts.inter(fontSize: 12, color: RdcTheme.textMuted)),
+                Text(
+                  isMimoAuto
+                      ? 'Modelo inteligente padrão — gratuito e ilimitado'
+                      : 'Modelo principal — sem necessidade de API Key',
+                  style: GoogleFonts.inter(fontSize: 12, color: RdcTheme.textMuted),
+                ),
               ]),
             ),
           ]),
@@ -622,8 +635,8 @@ class _HeroMiMoCard extends StatelessWidget {
                 icon: const Icon(Icons.explore, size: 16),
                 label: const Text('Explorar MiMo'),
                 style: OutlinedButton.styleFrom(
-                  foregroundColor: const Color(0xFFFF6900),
-                  side: const BorderSide(color: Color(0xFFFF6900)),
+                  foregroundColor: accentColor,
+                  side: BorderSide(color: accentColor),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   padding: const EdgeInsets.symmetric(vertical: 10),
                 ),
@@ -636,7 +649,7 @@ class _HeroMiMoCard extends StatelessWidget {
                 icon: Icon(isSelected ? Icons.check : Icons.add, size: 16),
                 label: Text(isSelected ? 'Selecionado' : 'Usar Agora'),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFFF6900),
+                  backgroundColor: accentColor,
                   foregroundColor: Colors.white,
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   padding: const EdgeInsets.symmetric(vertical: 10),

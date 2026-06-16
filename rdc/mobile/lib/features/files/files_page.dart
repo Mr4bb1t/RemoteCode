@@ -1,10 +1,12 @@
 /// RDC — Explorador de Arquivos (carregamento incremental)
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../core/api/api_client.dart';
 import '../../core/theme/app_theme.dart';
+import '../workspace/workspace_page.dart';
 
 typedef OnOpenFile = void Function(String path, String name);
 
@@ -53,11 +55,113 @@ class _FilesPageState extends ConsumerState<FilesPage> with AutomaticKeepAliveCl
   bool _loading = true;
   String? _error;
   String? _selectedPath;
+  Timer? _pollTimer;
+  StreamSubscription? _fileChangeSub;
+  bool _selectionMode = false;
+  final Set<String> _selectedPaths = {};
 
   @override
   void initState() {
     super.initState();
     _loadDir('');
+    _startPolling();
+    _fileChangeSub = WorkspaceEvents.fileChanges.listen((_) {
+      if (mounted && !_loading) {
+        _refreshTree();
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _pollTimer?.cancel();
+    _fileChangeSub?.cancel();
+    super.dispose();
+  }
+
+  void _startPolling() {
+    _pollTimer?.cancel();
+    _pollTimer = Timer.periodic(const Duration(seconds: 5), (timer) async {
+      if (!mounted || _loading) return;
+      await _refreshTree();
+    });
+  }
+
+  Future<void> _refreshTree() async {
+    await _reloadNodeAndChildren('');
+  }
+
+  Future<void> _reloadNodeAndChildren(String path) async {
+    try {
+      final res = await ApiClient.instance.get(
+        '/api/files/${widget.projectId}/tree',
+        queryParameters: {'path': path},
+      );
+      if (res.statusCode == 200 && mounted) {
+        final incoming = (res.data as List).map((j) => _FileNode.fromJson(j)).toList();
+        setState(() {
+          if (path.isEmpty) {
+            _mergeNodes(_rootNodes, incoming);
+          } else {
+            _updateChildrenAndMerge(path, incoming);
+          }
+        });
+
+        // Recarrega recursivamente cada pasta que está expandida nesta ramificação
+        final List<_FileNode> nodesToReload = [];
+        _findExpandedNodes(path.isEmpty ? _rootNodes : _findNodeByPath(_rootNodes, path)?.children ?? [], nodesToReload);
+        for (var node in nodesToReload) {
+          await _reloadNodeAndChildren(node.path);
+        }
+      }
+    } catch (_) {}
+  }
+
+  void _mergeNodes(List<_FileNode> existing, List<_FileNode> incoming) {
+    final Map<String, _FileNode> existingMap = {for (var n in existing) n.path: n};
+    existing.clear();
+    for (var inc in incoming) {
+      final extNode = existingMap[inc.path];
+      if (extNode != null) {
+        inc.isExpanded = extNode.isExpanded;
+        inc.children = extNode.children;
+      }
+      existing.add(inc);
+    }
+  }
+
+  void _updateChildrenAndMerge(String path, List<_FileNode> children) {
+    final node = _findNodeByPath(_rootNodes, path);
+    if (node != null) {
+      if (node.children == null) {
+        node.children = children;
+      } else {
+        _mergeNodes(node.children!, children);
+      }
+      node.isExpanded = true;
+    }
+  }
+
+  _FileNode? _findNodeByPath(List<_FileNode> nodes, String path) {
+    for (final n in nodes) {
+      if (n.path == path) return n;
+      if (n.children != null) {
+        final found = _findNodeByPath(n.children!, path);
+        if (found != null) return found;
+      }
+    }
+    return null;
+  }
+
+  void _findExpandedNodes(List<_FileNode> nodes, List<_FileNode> result) {
+    for (final n in nodes) {
+      if (n.isDir && n.isExpanded) {
+        result.add(n);
+        if (n.children != null) {
+          _findExpandedNodes(n.children!, result);
+        }
+      }
+    }
   }
 
   Future<void> _loadDir(String relativePath) async {
@@ -136,6 +240,7 @@ class _FilesPageState extends ConsumerState<FilesPage> with AutomaticKeepAliveCl
       data: {'project_id': widget.projectId, 'relative_path': path, 'is_dir': isDir},
     );
     await _loadDir(parentPath);
+    WorkspaceEvents.notifyFileChanges();
   }
 
   Future<void> _deleteItem(_FileNode node) async {
@@ -162,6 +267,52 @@ class _FilesPageState extends ConsumerState<FilesPage> with AutomaticKeepAliveCl
     );
     setState(() { _loading = true; });
     await _loadDir('');
+    WorkspaceEvents.notifyFileChanges();
+  }
+
+  Future<void> _deleteSelectedItems() async {
+    if (_selectedPaths.isEmpty) return;
+    
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: RdcTheme.bg700,
+        title: const Text('Excluir itens', style: TextStyle(color: RdcTheme.textPrimary)),
+        content: Text('Deseja realmente excluir os ${_selectedPaths.length} itens selecionados?', style: const TextStyle(color: RdcTheme.textSecondary)),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancelar')),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: RdcTheme.danger),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Excluir'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    
+    setState(() { _loading = true; });
+    
+    try {
+      await Future.wait(_selectedPaths.map((path) => ApiClient.instance.delete(
+        '/api/files/${widget.projectId}/delete',
+        data: {'project_id': widget.projectId, 'relative_path': path},
+      )));
+      
+      setState(() {
+        _selectedPaths.clear();
+        _selectionMode = false;
+      });
+      WorkspaceEvents.notifyFileChanges();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erro ao excluir itens: $e'), backgroundColor: RdcTheme.danger),
+        );
+      }
+    } finally {
+      await _loadDir('');
+    }
   }
 
   @override
@@ -178,11 +329,43 @@ class _FilesPageState extends ConsumerState<FilesPage> with AutomaticKeepAliveCl
           color: RdcTheme.bg800,
           child: Row(
             children: [
-              Text('Arquivos', style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600, color: RdcTheme.textSecondary)),
-              const Spacer(),
-              _ToolbarBtn(icon: Icons.create_new_folder_outlined, tooltip: 'Nova Pasta', onTap: () => _createItem(parentPath: '', isDir: true)),
-              _ToolbarBtn(icon: Icons.note_add_outlined, tooltip: 'Novo Arquivo', onTap: () => _createItem(parentPath: '', isDir: false)),
-              _ToolbarBtn(icon: Icons.refresh, tooltip: 'Atualizar', onTap: () { setState(() => _loading = true); _loadDir(''); }),
+              if (_selectionMode) ...[
+                IconButton(
+                  icon: const Icon(Icons.close, size: 18, color: RdcTheme.textMuted),
+                  onPressed: () {
+                    setState(() {
+                      _selectionMode = false;
+                      _selectedPaths.clear();
+                    });
+                  },
+                ),
+                Text(
+                  '${_selectedPaths.length} selecionado(s)',
+                  style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600, color: RdcTheme.textSecondary),
+                ),
+                const Spacer(),
+                if (_selectedPaths.isNotEmpty)
+                  IconButton(
+                    icon: const Icon(Icons.delete_sweep_outlined, size: 22, color: RdcTheme.danger),
+                    onPressed: _deleteSelectedItems,
+                    tooltip: 'Excluir selecionados',
+                  ),
+              ] else ...[
+                Text('Arquivos', style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600, color: RdcTheme.textSecondary)),
+                const Spacer(),
+                _ToolbarBtn(
+                  icon: Icons.check_box_outlined,
+                  tooltip: 'Selecionar vários',
+                  onTap: () {
+                    setState(() {
+                      _selectionMode = true;
+                    });
+                  },
+                ),
+                _ToolbarBtn(icon: Icons.create_new_folder_outlined, tooltip: 'Nova Pasta', onTap: () => _createItem(parentPath: '', isDir: true)),
+                _ToolbarBtn(icon: Icons.note_add_outlined, tooltip: 'Novo Arquivo', onTap: () => _createItem(parentPath: '', isDir: false)),
+                _ToolbarBtn(icon: Icons.refresh, tooltip: 'Atualizar', onTap: () { setState(() => _loading = true); _loadDir(''); }),
+              ],
             ],
           ),
         ),
@@ -194,6 +377,17 @@ class _FilesPageState extends ConsumerState<FilesPage> with AutomaticKeepAliveCl
               node: _rootNodes[i],
               depth: 0,
               selectedPath: _selectedPath,
+              selectionMode: _selectionMode,
+              selectedPaths: _selectedPaths,
+              onToggleSelect: (path, selected) {
+                setState(() {
+                  if (selected) {
+                    _selectedPaths.add(path);
+                  } else {
+                    _selectedPaths.remove(path);
+                  }
+                });
+              },
               onTap: (node) {
                 if (node.isDir) {
                   _toggleDir(node);
@@ -253,6 +447,9 @@ class _FileTreeItem extends StatelessWidget {
   final String? selectedPath;
   final void Function(_FileNode) onTap;
   final void Function(_FileNode) onLongPress;
+  final bool selectionMode;
+  final Set<String> selectedPaths;
+  final void Function(String, bool) onToggleSelect;
 
   const _FileTreeItem({
     required this.node,
@@ -260,6 +457,9 @@ class _FileTreeItem extends StatelessWidget {
     required this.selectedPath,
     required this.onTap,
     required this.onLongPress,
+    required this.selectionMode,
+    required this.selectedPaths,
+    required this.onToggleSelect,
   });
 
   Color _extColor(String? ext) {
@@ -295,19 +495,43 @@ class _FileTreeItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isSelected = selectedPath == node.path;
+    final isChecked = selectedPaths.contains(node.path);
     final color = node.isDir ? RdcTheme.warning : _extColor(node.extension);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         InkWell(
-          onTap: () => onTap(node),
-          onLongPress: () => onLongPress(node),
+          onTap: () {
+            if (selectionMode) {
+              onToggleSelect(node.path, !isChecked);
+            } else {
+              onTap(node);
+            }
+          },
+          onLongPress: () {
+            if (!selectionMode) {
+              onLongPress(node);
+            }
+          },
           child: Container(
             color: isSelected ? RdcTheme.primary.withOpacity(0.1) : null,
             padding: EdgeInsets.only(left: 12.0 + depth * 16, right: 12, top: 6, bottom: 6),
             child: Row(
               children: [
+                if (selectionMode) ...[
+                  SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: Checkbox(
+                      value: isChecked,
+                      activeColor: RdcTheme.primary,
+                      checkColor: Colors.white,
+                      onChanged: (val) => onToggleSelect(node.path, val ?? false),
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                ],
                 if (node.isDir)
                   Icon(node.isExpanded ? Icons.keyboard_arrow_down : Icons.keyboard_arrow_right, size: 16, color: RdcTheme.textMuted),
                 const SizedBox(width: 4),
@@ -335,6 +559,9 @@ class _FileTreeItem extends StatelessWidget {
             node: child, depth: depth + 1,
             selectedPath: selectedPath,
             onTap: onTap, onLongPress: onLongPress,
+            selectionMode: selectionMode,
+            selectedPaths: selectedPaths,
+            onToggleSelect: onToggleSelect,
           )),
       ],
     );

@@ -86,6 +86,16 @@ async def run_prompt(
     yield f"Modelo: {model}\n"
     yield f"Projeto: {os.path.basename(project_path)}\n\n"
 
+    cmd = [
+        mimo_path,
+        "run",
+        "--dir", str(project_path),
+        "--model", model,
+        "--format", "json",
+        "--dangerously-skip-permissions",
+        prompt,
+    ]
+
     stderr_lines: list[str] = []
 
     try:

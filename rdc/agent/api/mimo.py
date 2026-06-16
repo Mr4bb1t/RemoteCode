@@ -152,18 +152,20 @@ async def list_active_runs(
 @router.get("/api/mimo/run/{run_id}/stream")
 async def stream_run(
     run_id: int,
+    last_line_idx: int = -1,
     _: dict = Depends(get_current_user),
 ) -> StreamingResponse:
     """Permite reconectar a um processo em andamento via SSE."""
     from services.background_runner import subscribe_run
 
     async def event_generator():
-        async for event in subscribe_run(run_id):
+        async for event in subscribe_run(run_id, last_line_idx):
             event_type = event.get("type")
             if event_type == "output":
                 line = event.get("line", "")
+                line_idx = event.get("line_idx", -1)
                 safe = line.replace('"', '\\"').replace("\n", "\\n")
-                yield f'data: {{"type":"output","line":"{safe}"}}\n\n'
+                yield f'data: {{"type":"output","line":"{safe}","line_idx":{line_idx}}}\n\n'
             elif event_type == "done":
                 elapsed = event.get("elapsed", 0)
                 files = event.get("files_changed", [])
@@ -199,13 +201,35 @@ async def get_history(
         .limit(50)
     )
     runs = result.scalars().all()
-    return [
-        AntigravityRunResponse(
-            **{k: v for k, v in run.__dict__.items() if not k.startswith("_") and k != "files_changed"},
-            files_changed=json.loads(run.files_changed) if run.files_changed else None,
-        )
-        for run in runs
-    ]
+    
+    from services.background_runner import get_active_run
+    response_runs = []
+    for run in runs:
+        active = get_active_run(run.id)
+        if active:
+            response_runs.append(
+                AntigravityRunResponse(
+                    id=run.id,
+                    project_id=run.project_id,
+                    prompt=run.prompt,
+                    output_log=active.output_log,
+                    status=active.status,
+                    files_changed=active.files_changed,
+                    execution_time_s=active.elapsed,
+                    output_lines_count=len(active.output_lines),
+                    created_at=run.created_at,
+                    finished_at=run.finished_at,
+                )
+            )
+        else:
+            response_runs.append(
+                AntigravityRunResponse(
+                    **{k: v for k, v in run.__dict__.items() if not k.startswith("_") and k != "files_changed"},
+                    files_changed=json.loads(run.files_changed) if run.files_changed else None,
+                    output_lines_count=None,
+                )
+            )
+    return response_runs
 
 
 @router.get("/api/mimo/run/{run_id}", response_model=AntigravityRunResponse)
@@ -218,9 +242,27 @@ async def get_run(
     run = await db.get(AntigravityRun, run_id)
     if not run:
         raise HTTPException(status_code=404, detail="Execução não encontrada")
+        
+    from services.background_runner import get_active_run
+    active = get_active_run(run_id)
+    if active:
+        return AntigravityRunResponse(
+            id=run.id,
+            project_id=run.project_id,
+            prompt=run.prompt,
+            output_log=active.output_log,
+            status=active.status,
+            files_changed=active.files_changed,
+            execution_time_s=active.elapsed,
+            output_lines_count=len(active.output_lines),
+            created_at=run.created_at,
+            finished_at=run.finished_at,
+        )
+        
     return AntigravityRunResponse(
         **{k: v for k, v in run.__dict__.items() if not k.startswith("_") and k != "files_changed"},
         files_changed=json.loads(run.files_changed) if run.files_changed else None,
+        output_lines_count=None,
     )
 
 
@@ -249,6 +291,23 @@ async def get_run_diff(
     return diffs
 
 
+def _remove_empty_parents(abs_path: str, project_path: str):
+    parent = os.path.dirname(abs_path)
+    while parent and parent != project_path and len(parent) > len(project_path):
+        if os.path.exists(parent) and os.path.isdir(parent):
+            try:
+                contents = os.listdir(parent)
+                if not contents:
+                    os.rmdir(parent)
+                else:
+                    break
+            except Exception:
+                break
+        else:
+            break
+        parent = os.path.dirname(parent)
+
+
 @router.post("/api/mimo/run/{run_id}/approve")
 @router.post("/api/antigravity/run/{run_id}/approve")
 async def approve_run(
@@ -259,7 +318,6 @@ async def approve_run(
 ) -> dict:
     """
     Aprova ou rejeita as mudanças de uma execução do Mimo.
-    Rejeitar faz git checkout -- . para restaurar os arquivos.
     """
     run = await db.get(AntigravityRun, run_id)
     if not run:
@@ -271,19 +329,260 @@ async def approve_run(
     if body.approve:
         run.status = "approved"
         message = "Mudanças aprovadas"
+        # Limpa o snapshot físico correspondente
+        try:
+            snapshot_path = os.path.join("snapshots", f"{run_id}.json")
+            if os.path.exists(snapshot_path):
+                os.remove(snapshot_path)
+        except Exception:
+            pass
     else:
         run.status = "rejected"
-        if project:
+        snapshot_restored = False
+        
+        # 1. Tentar restaurar do snapshot físico primeiro (mais seguro e preserva uncommitted changes alheios)
+        try:
+            snapshot_path = os.path.join("snapshots", f"{run_id}.json")
+            if os.path.exists(snapshot_path):
+                with open(snapshot_path, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+                project_path = data["project_path"]
+                file_contents = data["file_contents"]
+                for rel_path, content in file_contents.items():
+                    abs_path = os.path.join(project_path, rel_path)
+                    os.makedirs(os.path.dirname(abs_path), exist_ok=True)
+                    with open(abs_path, "w", encoding="utf-8") as f:
+                        f.write(content)
+                # Apaga arquivos novos
+                if run.files_changed:
+                    files = json.loads(run.files_changed)
+                    for f in files:
+                        if f not in file_contents:
+                            abs_path = os.path.join(project_path, f)
+                            if os.path.isfile(abs_path):
+                                os.remove(abs_path)
+                                _remove_empty_parents(abs_path, project_path)
+                snapshot_restored = True
+                try:
+                    os.remove(snapshot_path)
+                except Exception:
+                    pass
+        except Exception:
+            pass
+
+        # 2. Fallback para Git
+        if not snapshot_restored and project:
             try:
                 import git
-                repo = git.Repo(project.path)
-                repo.git.checkout("--", ".")
+                repo = git.Repo(project.path, search_parent_directories=True)
+                repo_dir = repo.working_tree_dir
+                files = json.loads(run.files_changed) if run.files_changed else []
+                for rel_path in files:
+                    abs_path = os.path.join(project.path, rel_path)
+                    git_rel_path = os.relpath(abs_path, repo_dir)
+                    if git_rel_path in repo.untracked_files:
+                        try:
+                            os.remove(abs_path)
+                            _remove_empty_parents(abs_path, project.path)
+                        except Exception:
+                            pass
+                    else:
+                        try:
+                            repo.git.checkout("--", abs_path)
+                        except Exception:
+                            pass
             except Exception:
                 pass
         message = "Mudanças rejeitadas e revertidas"
 
     await db.commit()
     return {"message": message, "status": run.status}
+
+
+class SnapshotSaveRequest(BaseModel):
+    project_id: int
+    run_id: int
+    files: list[str] | None = None
+
+
+@router.post("/api/mimo/snapshot/save")
+async def save_snapshot(
+    body: SnapshotSaveRequest,
+    db: AsyncSession = Depends(get_db),
+    _: dict = Depends(get_current_user),
+) -> dict:
+    """
+    Cria um backup físico no agente dos arquivos do projeto antes da execução.
+    """
+    project_path = await _project_path(body.project_id, db)
+    file_contents = {}
+    
+    files_to_backup = body.files
+    if not files_to_backup:
+        files_to_backup = []
+        for root, dirs, files in os.walk(project_path):
+            if any(ignored in root.replace("\\", "/").split("/") for ignored in (".git", "node_modules", ".mimocode")):
+                continue
+            for file in files:
+                abs_path = os.path.join(root, file)
+                rel_path = os.relpath(abs_path, project_path).replace("\\", "/")
+                files_to_backup.append(rel_path)
+    
+    for rel_path in files_to_backup:
+        abs_path = os.path.join(project_path, rel_path)
+        if os.path.isfile(abs_path):
+            try:
+                with open(abs_path, "r", encoding="utf-8", errors="ignore") as f:
+                    file_contents[rel_path] = f.read()
+            except Exception:
+                pass
+
+    os.makedirs("snapshots", exist_ok=True)
+    snapshot_path = os.path.join("snapshots", f"{body.run_id}.json")
+    with open(snapshot_path, "w", encoding="utf-8") as f:
+        json.dump({
+            "project_id": body.project_id,
+            "project_path": project_path,
+            "file_contents": file_contents
+        }, f, indent=2)
+
+    return {"message": f"Snapshot saved for run {body.run_id}", "files_backed_up": len(file_contents)}
+
+
+@router.post("/api/mimo/snapshot/restore/{run_id}")
+async def restore_snapshot(
+    run_id: int,
+    db: AsyncSession = Depends(get_db),
+    _: dict = Depends(get_current_user),
+) -> dict:
+    """
+    Restaura o backup físico ou faz fallback para Git.
+    """
+    snapshot_path = os.path.join("snapshots", f"{run_id}.json")
+    if not os.path.exists(snapshot_path):
+        # Fallback Git se o snapshot não existir
+        run = await db.get(AntigravityRun, run_id)
+        if run:
+            result = await db.execute(select(Project).where(Project.id == run.project_id))
+            project = result.scalar_one_or_none()
+            if project:
+                try:
+                    import git
+                    repo = git.Repo(project.path, search_parent_directories=True)
+                    repo_dir = repo.working_tree_dir
+                    files = json.loads(run.files_changed) if run.files_changed else []
+                    for rel_path in files:
+                        abs_path = os.path.join(project.path, rel_path)
+                        git_rel_path = os.relpath(abs_path, repo_dir)
+                        if git_rel_path in repo.untracked_files:
+                            try:
+                                os.remove(abs_path)
+                                _remove_empty_parents(abs_path, project.path)
+                            except Exception:
+                                pass
+                        else:
+                            try:
+                                repo.git.checkout("--", abs_path)
+                            except Exception:
+                                pass
+                    return {"message": "Restaurado via Git (sem snapshot físico)"}
+                except Exception as e:
+                    raise HTTPException(status_code=404, detail=f"Erro ao restaurar via Git: {e}")
+        raise HTTPException(status_code=404, detail="Snapshot não encontrado")
+
+    try:
+        with open(snapshot_path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        
+        project_path = data["project_path"]
+        file_contents = data["file_contents"]
+        
+        for rel_path, content in file_contents.items():
+            abs_path = os.path.join(project_path, rel_path)
+            os.makedirs(os.path.dirname(abs_path), exist_ok=True)
+            with open(abs_path, "w", encoding="utf-8") as f:
+                f.write(content)
+                
+        # Apaga novos arquivos criados
+        run = await db.get(AntigravityRun, run_id)
+        if run and run.files_changed:
+            files = json.loads(run.files_changed)
+            for f in files:
+                if f not in file_contents:
+                    abs_path = os.path.join(project_path, f)
+                    if os.path.isfile(abs_path):
+                        try:
+                            os.remove(abs_path)
+                            _remove_empty_parents(abs_path, project_path)
+                        except Exception:
+                            pass
+        
+        return {"message": f"Snapshot {run_id} restaurado com sucesso"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.delete("/api/mimo/snapshot/{run_id}")
+async def delete_snapshot(
+    run_id: int,
+    _: dict = Depends(get_current_user),
+) -> dict:
+    """
+    Remove o snapshot físico correspondente.
+    """
+    snapshot_path = os.path.join("snapshots", f"{run_id}.json")
+    if os.path.exists(snapshot_path):
+        try:
+            os.remove(snapshot_path)
+            return {"message": "Snapshot deletado"}
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=str(e))
+    return {"message": "Snapshot não existia"}
+
+
+@router.delete("/api/mimo/run/{run_id}")
+@router.delete("/api/antigravity/run/{run_id}")
+async def delete_run(
+    run_id: int,
+    db: AsyncSession = Depends(get_db),
+    _: dict = Depends(get_current_user),
+) -> dict:
+    """
+    Remove uma execução do histórico do banco de dados.
+    """
+    run = await db.get(AntigravityRun, run_id)
+    if not run:
+        raise HTTPException(status_code=404, detail="Execução não encontrada")
+
+    await db.delete(run)
+    await db.commit()
+    return {"message": f"Execução {run_id} excluída do histórico"}
+
+
+class SnapshotRenameRequest(BaseModel):
+    old_run_id: int
+    new_run_id: int
+
+
+@router.post("/api/mimo/snapshot/rename")
+async def rename_snapshot(
+    body: SnapshotRenameRequest,
+    _: dict = Depends(get_current_user),
+) -> dict:
+    """
+    Renomeia o snapshot físico correspondente.
+    """
+    os.makedirs("snapshots", exist_ok=True)
+    old_path = os.path.join("snapshots", f"{body.old_run_id}.json")
+    new_path = os.path.join("snapshots", f"{body.new_run_id}.json")
+    if os.path.exists(old_path):
+        try:
+            os.rename(old_path, new_path)
+            return {"message": f"Snapshot renamed from {body.old_run_id} to {body.new_run_id}"}
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=str(e))
+    return {"message": "Snapshot de origem não existia"}
+
 
 
 @router.get("/api/mimo/models", response_model=list[MimoModelInfo])
@@ -365,7 +664,8 @@ async def get_models(
                 logo = "🔶"
                 color = "#FF6900"
                 key_url = "https://platform.xiaomimimo.com"
-                key_hint = "Gratuito"
+                # Somente mimo-auto é gratuito; todos os outros precisam de API key
+                key_hint = "" if model_id.lower() == "mimo-auto" else "API Key Xiaomi MiMo"
                 if "tts" in model_id.lower():
                     logo = "🔊"
                 elif "omni" in model_id.lower():

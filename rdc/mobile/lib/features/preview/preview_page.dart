@@ -1,6 +1,13 @@
 /// RDC — Preview Web com WebView e multi-dispositivo
+import 'dart:async';
+import 'dart:convert';
+import 'dart:io';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:http/http.dart' as http;
+import 'package:http/io_client.dart' as http_io;
 import 'package:url_launcher/url_launcher.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
@@ -60,36 +67,70 @@ class _PreviewPageState extends State<PreviewPage> with AutomaticKeepAliveClient
   }
 
   Future<void> _selectPort(int port) async {
-    setState(() { _selectedPort = port; _webError = null; _webLoading = true; });
+    setState(() { _selectedPort = port; _webError = null; _webLoading = true; _currentUrl = ''; });
     final agentUrl = await SecureStorage.getAgentUrl() ?? '';
+    final token = await SecureStorage.getAccessToken() ?? '';
 
-    final proxyUrl = '$agentUrl/api/preview/proxy/$port';
+    final proxyUrl = '$agentUrl/api/preview/proxy/$port/';
     setState(() => _currentUrl = proxyUrl);
 
-    final ctrl = WebViewController()
-      ..setJavaScriptMode(JavaScriptMode.unrestricted)
-      ..setBackgroundColor(const Color(0xFF121212))
-      ..setUserAgent('Mozilla/5.0 (Linux; Android 13) AppleWebKit/537.36 Chrome/120.0 Mobile Safari/537.36')
-      ..setNavigationDelegate(NavigationDelegate(
-        onWebResourceError: (error) {
-          debugPrint('WebView Error: ${error.description}');
-          if (mounted) {
-            setState(() {
-              _webError = error.description;
-              _webLoading = false;
-            });
-          }
-        },
-        onPageStarted: (url) {
-          if (mounted) setState(() { _webLoading = true; _webError = null; });
-        },
-        onPageFinished: (url) {
-          if (mounted) setState(() => _webLoading = false);
-        },
-      ))
-      ..loadRequest(Uri.parse(proxyUrl));
+    try {
+      // Buscar conteúdo via HTTP (que já tem SSL bypass)
+      final httpClient = HttpClient()..badCertificateCallback = (cert, host, port) => true;
+      final client = http_io.IOClient(httpClient);
+      final response = await client.get(
+        Uri.parse(proxyUrl),
+        headers: {'Authorization': 'Bearer $token'},
+      );
 
-    setState(() => _webCtrl = ctrl);
+      if (response.statusCode == 200) {
+        final content = response.body;
+        final contentType = response.headers['content-type'] ?? 'text/html';
+
+        final ctrl = WebViewController()
+          ..setJavaScriptMode(JavaScriptMode.unrestricted)
+          ..setBackgroundColor(const Color(0xFF121212))
+          ..setNavigationDelegate(NavigationDelegate(
+            onWebResourceError: (error) {
+              debugPrint('WebView Error: ${error.description}');
+            },
+            onPageStarted: (url) {
+              if (mounted) setState(() => _webLoading = true);
+            },
+            onPageFinished: (url) {
+              if (mounted) setState(() => _webLoading = false);
+            },
+          ));
+
+        if (contentType.contains('html')) {
+          // Converter URLs relativas para absolutas
+          String html = content;
+          final baseUrl = '$agentUrl/api/preview/proxy/$port/';
+          html = html.replaceAll('src="', 'src="$baseUrl');
+          html = html.replaceAll("src='", "src='$baseUrl");
+          html = html.replaceAll('href="', 'href="$baseUrl');
+          html = html.replaceAll("href='", "href='$baseUrl");
+
+          await ctrl.loadHtmlString(html, baseUrl: baseUrl);
+        } else {
+          await ctrl.loadHtmlString(
+            '<pre style="color:#ccc;background:#121212;padding:16px;font-family:monospace;font-size:12px;white-space:pre-wrap;">$content</pre>',
+          );
+        }
+
+        setState(() => _webCtrl = ctrl);
+      } else {
+        setState(() {
+          _webError = 'Erro HTTP ${response.statusCode}';
+          _webLoading = false;
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _webError = 'Falha ao carregar preview: $e';
+        _webLoading = false;
+      });
+    }
   }
 
   void _openInBrowser() {
@@ -161,7 +202,7 @@ class _PreviewPageState extends State<PreviewPage> with AutomaticKeepAliveClient
               ),
             ),
             const SizedBox(width: 8),
-            IconButton(icon: const Icon(Icons.refresh, size: 18), onPressed: () => _webCtrl?.reload(), color: RdcTheme.textSecondary),
+            IconButton(icon: const Icon(Icons.refresh, size: 18), onPressed: _selectedPort != null ? () => _selectPort(_selectedPort!) : null, color: RdcTheme.textSecondary),
             IconButton(icon: const Icon(Icons.open_in_browser, size: 18), onPressed: _openInBrowser, color: RdcTheme.textSecondary, tooltip: 'Abrir no navegador'),
             IconButton(icon: const Icon(Icons.search, size: 18), onPressed: _loadPorts, color: RdcTheme.textSecondary),
           ]),
@@ -426,6 +467,26 @@ class _NoServerView extends StatelessWidget {
               ),
             ),
           ]),
+          const SizedBox(height: 20),
+          // Banner de Dica de SSL/HTTPS
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: RdcTheme.info.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: RdcTheme.info.withValues(alpha: 0.2)),
+            ),
+            child: Row(children: [
+              const Icon(Icons.info_outline, size: 16, color: RdcTheme.info),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'Dica: Se a página ficar em branco ou der erro de conexão, abra uma vez no "Navegador" e aceite o certificado auto-assinado no seu celular, ou inicie o agente com o argumento "--http".',
+                  style: GoogleFonts.inter(fontSize: 10, color: RdcTheme.textSecondary, height: 1.4),
+                ),
+              ),
+            ]),
+          ),
         ],
       ),
     );

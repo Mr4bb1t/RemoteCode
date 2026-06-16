@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import os
 import time
 from datetime import datetime, timezone
 from typing import AsyncGenerator
@@ -16,6 +17,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from database import AsyncSessionLocal
 from models.antigravity import AntigravityRun
+
 
 
 class RunState:
@@ -105,6 +107,23 @@ async def run_in_background(
     save_interval = 10  # linhas entre saves
     lines_since_save = 0
 
+    # 1. Escanear os arquivos do projeto antes da execução
+    def scan_files(dir_path):
+        files_map = {}
+        for root, dirs, files in os.walk(dir_path):
+            if any(ignored in root.replace("\\", "/").split("/") for ignored in (".git", "node_modules", ".mimocode")):
+                continue
+            for file in files:
+                abs_path = os.path.join(root, file)
+                rel_path = os.relpath(abs_path, dir_path).replace("\\", "/")
+                try:
+                    files_map[rel_path] = os.path.getmtime(abs_path)
+                except Exception:
+                    pass
+        return files_map
+
+    pre_files = await asyncio.to_thread(scan_files, project_path)
+
     try:
         async for line in mimo_run_fn(project_path, prompt):
             state.output_lines.append(line)
@@ -114,6 +133,7 @@ async def run_in_background(
             await _notify_subscribers(state, {
                 "type": "output",
                 "line": line,
+                "line_idx": len(state.output_lines) - 1,
                 "run_id": run_id,
                 "elapsed": state.elapsed,
             })
@@ -123,9 +143,6 @@ async def run_in_background(
                 await _save_progress(state)
                 lines_since_save = 0
 
-        # Detectar arquivos modificados
-        from services.mimo_service import detect_changed_files
-        state.files_changed = detect_changed_files(project_path, state.output_log)
         state.status = "success"
 
     except asyncio.CancelledError:
@@ -138,6 +155,23 @@ async def run_in_background(
             "run_id": run_id,
         })
     finally:
+        # Detectar mudanças no sistema de arquivos comparando com o scan inicial
+        def get_changes(pre, dir_path):
+            post = scan_files(dir_path)
+            changed = []
+            for rel_path, post_mtime in post.items():
+                if rel_path not in pre or pre[rel_path] != post_mtime:
+                    changed.append(rel_path)
+            for rel_path in pre.keys():
+                if rel_path not in post:
+                    changed.append(rel_path)
+            return list(set(changed))
+
+        try:
+            state.files_changed = await asyncio.to_thread(get_changes, pre_files, project_path)
+        except Exception:
+            pass
+
         # Salvar estado final
         await _save_progress(state)
 
@@ -169,7 +203,7 @@ async def run_in_background(
         _active_runs.pop(run_id, None)
 
 
-async def subscribe_run(run_id: int) -> AsyncGenerator[dict, None]:
+async def subscribe_run(run_id: int, last_line_idx: int = -1) -> AsyncGenerator[dict, None]:
     """Permite ao frontend se inscrever nos eventos de um run ativo."""
     state = _active_runs.get(run_id)
     if not state:
@@ -179,19 +213,28 @@ async def subscribe_run(run_id: int) -> AsyncGenerator[dict, None]:
     state.subscribers.append(queue)
 
     try:
-        # Enviar estado atual
-        yield {
-            "type": "status",
-            "run_id": run_id,
-            "status": state.status,
-            "elapsed": state.elapsed,
-            "output_lines": len(state.output_lines),
-            "files_changed": state.files_changed,
-        }
+        # Enviar logs perdidos/anteriores a partir do last_line_idx + 1
+        start_idx = last_line_idx + 1
+        if start_idx < len(state.output_lines):
+            for idx in range(start_idx, len(state.output_lines)):
+                yield {
+                    "type": "output",
+                    "line": state.output_lines[idx],
+                    "line_idx": idx,
+                    "run_id": run_id,
+                    "elapsed": state.elapsed,
+                }
+                last_line_idx = idx
 
         while True:
             try:
                 event = await asyncio.wait_for(queue.get(), timeout=30)
+                if event.get("type") == "output":
+                    line_idx = event.get("line_idx", -1)
+                    if line_idx <= last_line_idx:
+                        continue
+                    last_line_idx = line_idx
+
                 yield event
                 if event.get("type") == "done":
                     break

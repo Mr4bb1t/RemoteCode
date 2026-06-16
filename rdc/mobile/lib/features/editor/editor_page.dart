@@ -1,4 +1,5 @@
 /// RDC — Editor de código com syntax highlight
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_highlight/flutter_highlight.dart';
@@ -7,6 +8,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../core/api/api_client.dart';
 import '../../core/theme/app_theme.dart';
+import '../workspace/workspace_page.dart';
 
 class EditorPage extends StatefulWidget {
   final int projectId;
@@ -36,19 +38,62 @@ class _EditorPageState extends State<EditorPage> with AutomaticKeepAliveClientMi
   bool _readOnly = false;
   String? _error;
   String? _currentPath;
+  Timer? _pollTimer;
+  StreamSubscription? _fileChangeSub;
 
   @override
   void didUpdateWidget(EditorPage old) {
     super.didUpdateWidget(old);
     if (widget.filePath != old.filePath && widget.filePath != null) {
       _loadFile();
+      _startPolling();
     }
   }
 
   @override
   void initState() {
     super.initState();
-    if (widget.filePath != null) _loadFile();
+    if (widget.filePath != null) {
+      _loadFile();
+      _startPolling();
+    }
+    _fileChangeSub = WorkspaceEvents.fileChanges.listen((_) {
+      if (mounted && widget.filePath != null && !_modified && !_loading) {
+        _loadFile();
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _pollTimer?.cancel();
+    _fileChangeSub?.cancel();
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  void _startPolling() {
+    _pollTimer?.cancel();
+    _pollTimer = Timer.periodic(const Duration(seconds: 3), (timer) async {
+      if (!mounted || _loading || widget.filePath == null || _readOnly) return;
+      if (_modified) return; // Não sobrescreve se o usuário tiver rascunho modificado
+      
+      try {
+        final res = await ApiClient.instance.get(
+          '/api/files/${widget.projectId}/read',
+          queryParameters: {'path': widget.filePath},
+        );
+        if (res.statusCode == 200 && mounted) {
+          final newContent = res.data['content'] ?? '';
+          if (newContent != _ctrl.text && !_modified) {
+            setState(() {
+              _ctrl.text = newContent;
+              _previousText = newContent;
+            });
+          }
+        }
+      } catch (_) {}
+    });
   }
 
   Future<void> _loadFile() async {
@@ -93,7 +138,9 @@ class _EditorPageState extends State<EditorPage> with AutomaticKeepAliveClientMi
         );
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Erro: $e'), backgroundColor: RdcTheme.danger));
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Erro: $e'), backgroundColor: RdcTheme.danger));
+      }
     }
   }
 

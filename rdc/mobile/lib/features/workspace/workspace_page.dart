@@ -1,4 +1,4 @@
-/// RDC — Workspace: container principal com abas do projeto
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -122,4 +122,12 @@ class _WorkspaceTab {
   final IconData icon;
   final String label;
   const _WorkspaceTab({required this.icon, required this.label});
+}
+
+class WorkspaceEvents {
+  static final _fileChangeController = StreamController<void>.broadcast();
+  static Stream<void> get fileChanges => _fileChangeController.stream;
+  static void notifyFileChanges() {
+    _fileChangeController.add(null);
+  }
 }

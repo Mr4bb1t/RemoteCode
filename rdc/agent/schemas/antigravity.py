@@ -23,6 +23,7 @@ class AntigravityRunResponse(BaseModel):
     execution_time_s: float | None
     output_log: str | None
     files_changed: list[str] | None = None
+    output_lines_count: int | None = None
     created_at: datetime
     finished_at: datetime | None
 
