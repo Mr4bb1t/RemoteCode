@@ -124,3 +124,15 @@ async def test_history(
         .limit(20)
     )
     return [TestRunResponse.model_validate(r) for r in result.scalars().all()]
+
+
+@router.delete("/{project_id}/history")
+async def clear_test_history(
+    project_id: int,
+    db: AsyncSession = Depends(get_db),
+    _: dict = Depends(get_current_user),
+):
+    from sqlalchemy import delete
+    await db.execute(delete(TestRun).where(TestRun.project_id == project_id))
+    await db.commit()
+    return {"message": "Test history cleared"}

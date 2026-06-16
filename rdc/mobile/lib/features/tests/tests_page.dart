@@ -57,6 +57,15 @@ class _TestsPageState extends State<TestsPage> with AutomaticKeepAliveClientMixi
     }
   }
 
+  Future<void> _clearHistory() async {
+    try {
+      await ApiClient.instance.delete('/api/tests/${widget.projectId}/history');
+      setState(() => _history = []);
+    } catch (e) {
+      setState(() => _error = e.toString());
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     super.build(context);
@@ -89,17 +98,40 @@ class _TestsPageState extends State<TestsPage> with AutomaticKeepAliveClientMixi
       if (_error != null)
         Container(
           padding: const EdgeInsets.all(12),
-          color: RdcTheme.danger.withOpacity(0.1),
+          color: RdcTheme.danger.withValues(alpha: 0.1),
           child: Text(_error!, style: const TextStyle(color: RdcTheme.danger)),
         ),
 
       // Último resultado destaque
       if (_history.isNotEmpty) _TestResultCard(run: _history.first, isLatest: true),
 
+      // Header Histórico + Limpar
+      if (_history.length > 1 || _history.isNotEmpty && _history.first['status'] != 'running')
+        Padding(
+          padding: const EdgeInsets.only(left: 16, right: 16, top: 16, bottom: 8),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text('Histórico', style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w600, color: RdcTheme.textPrimary)),
+              TextButton.icon(
+                onPressed: _clearHistory,
+                icon: const Icon(Icons.delete_outline, size: 16),
+                label: const Text('Limpar Histórico'),
+                style: TextButton.styleFrom(
+                  foregroundColor: RdcTheme.danger,
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  minimumSize: Size.zero,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
+              ),
+            ],
+          ),
+        ),
+
       // Histórico
       Expanded(
         child: ListView.builder(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           itemCount: _history.length,
           itemBuilder: (ctx, i) => i == 0 ? const SizedBox.shrink() : _TestHistoryTile(run: _history[i]),
         ),
