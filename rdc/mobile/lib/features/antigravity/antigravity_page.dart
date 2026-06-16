@@ -132,6 +132,8 @@ class _AntigravityPageState extends State<AntigravityPage> with AutomaticKeepAli
 
   List<_ChatMsg> get _msgs => _currentSession?.messages ?? [];
 
+  StreamSubscription<String>? _promptSub;
+
   @override
   void initState() {
     super.initState();
@@ -145,6 +147,17 @@ class _AntigravityPageState extends State<AntigravityPage> with AutomaticKeepAli
     ).animate(CurvedAnimation(parent: _drawerCtrl, curve: Curves.easeOutCubic));
     _loadModel();
     _loadSessions();
+
+    _promptSub = WorkspaceEvents.agentPrompt.listen((prompt) {
+      if (mounted) {
+        // Se houver sessão, preencher o prompt e submeter, ou criar sessão
+        if (_currentSession == null) {
+          _newSession();
+        }
+        _promptCtrl.text = prompt;
+        _sendPrompt();
+      }
+    });
   }
 
   Future<void> _loadModel() async {
@@ -158,6 +171,7 @@ class _AntigravityPageState extends State<AntigravityPage> with AutomaticKeepAli
 
   @override
   void dispose() {
+    _promptSub?.cancel();
     _drawerCtrl.dispose();
     _promptCtrl.dispose();
     _scrollCtrl.dispose();

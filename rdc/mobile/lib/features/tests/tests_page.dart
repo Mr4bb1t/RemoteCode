@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../core/api/api_client.dart';
 import '../../core/theme/app_theme.dart';
+import '../workspace/workspace_page.dart';
 
 class TestsPage extends StatefulWidget {
   final int projectId;
@@ -120,6 +121,7 @@ class _TestResultCard extends StatelessWidget {
     final skipped = run['skipped'] ?? 0;
     final elapsed = run['execution_time_s'];
     final output = run['output'] ?? '';
+    final runner = run['runner'] ?? 'auto';
 
     final statusColor = switch (status) {
       'passed' => RdcTheme.success,
@@ -127,6 +129,15 @@ class _TestResultCard extends StatelessWidget {
       'running' => RdcTheme.warning,
       _ => RdcTheme.textMuted,
     };
+
+    final isMissingTester = status == 'failed' && (
+      output.contains('not recognized') || 
+      output.contains('not found') || 
+      output.contains('No module named') || 
+      output.contains('command not found') ||
+      output.contains('ERR_MODULE_NOT_FOUND') ||
+      output.contains('Cannot find module')
+    );
 
     return Container(
       margin: const EdgeInsets.all(16),
@@ -152,6 +163,51 @@ class _TestResultCard extends StatelessWidget {
           const SizedBox(width: 8),
           _StatBadge('$skipped', 'Pulou', RdcTheme.textMuted),
         ]),
+        if (isMissingTester && isLatest) ...[
+          const SizedBox(height: 16),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: RdcTheme.primary.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: RdcTheme.primary.withValues(alpha: 0.3)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const Icon(Icons.auto_awesome, color: RdcTheme.primary, size: 18),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Parece que o runner "$runner" não está instalado ou configurado no projeto.',
+                        style: GoogleFonts.inter(fontSize: 12, color: RdcTheme.primary, fontWeight: FontWeight.w600),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: RdcTheme.primary,
+                      foregroundColor: Colors.white,
+                    ),
+                    onPressed: () {
+                      final prompt = 'Por favor, configure e instale as dependências para rodar testes com o $runner neste projeto.';
+                      WorkspaceEvents.sendAgentPrompt(prompt);
+                      WorkspaceEvents.switchToTab(6); // Mimo Agent aba
+                    },
+                    icon: const Icon(Icons.build, size: 16),
+                    label: const Text('Adicionar Tester com MiMo Agent'),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
         if (output.isNotEmpty && status == 'failed') ...[
           const SizedBox(height: 12),
           const Divider(),

@@ -230,6 +230,13 @@ async def run_prompt(
         yield "\n[ERRO] Mimo CLI nao encontrado. Instale com: npm install -g @mimo-ai/cli\n"
     except Exception as e:
         yield f"\n[ERRO] {str(e)}\n"
+    finally:
+        # Garantir que o subprocesso seja encerrado se a tarefa for cancelada
+        try:
+            if 'process' in locals() and process.returncode is None:
+                process.kill()
+        except Exception:
+            pass
 
 def _sanitize_line(line: str) -> str:
     """Remove ruído do sistema e formata saída para exibição limpa."""

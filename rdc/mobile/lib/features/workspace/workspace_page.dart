@@ -46,14 +46,20 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage>
     _WorkspaceTab(icon: Icons.preview_outlined, label: 'Preview'),
   ];
 
+  StreamSubscription<int>? _tabSub;
+
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: _tabs.length, vsync: this);
+    _tabSub = WorkspaceEvents.switchTab.listen((index) {
+      if (mounted) _tabController.animateTo(index);
+    });
   }
 
   @override
   void dispose() {
+    _tabSub?.cancel();
     _tabController.dispose();
     super.dispose();
   }
@@ -129,5 +135,17 @@ class WorkspaceEvents {
   static Stream<void> get fileChanges => _fileChangeController.stream;
   static void notifyFileChanges() {
     _fileChangeController.add(null);
+  }
+
+  static final _agentPromptController = StreamController<String>.broadcast();
+  static Stream<String> get agentPrompt => _agentPromptController.stream;
+  static void sendAgentPrompt(String prompt) {
+    _agentPromptController.add(prompt);
+  }
+
+  static final _switchTabController = StreamController<int>.broadcast();
+  static Stream<int> get switchTab => _switchTabController.stream;
+  static void switchToTab(int index) {
+    _switchTabController.add(index);
   }
 }

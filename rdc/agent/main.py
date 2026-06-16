@@ -166,6 +166,8 @@ def main() -> None:
         host=args.host,
         port=args.port,
         reload=settings.debug,
+        reload_includes=["*.py"],
+        reload_excludes=["*.db", "*.db-journal", "*.json"],
         log_level="info",
     )
 

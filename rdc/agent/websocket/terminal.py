@@ -81,8 +81,8 @@ async def terminal_ws(
         pass
     finally:
         reader_task.cancel()
-        # Não matar a sessão para manter persistente
-        # kill_session(session_id)
+        # Matar a sessão para não vazar processos (que seguram a porta 8765 no Windows)
+        kill_session(session_id)
 
 
 @router.websocket("/ws/terminal/{session_id}/kill")
