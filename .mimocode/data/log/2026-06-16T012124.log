@@ -1,0 +1,615 @@
+INFO  2026-06-16T01:21:24 +912ms service=server-proxy version=0.1.1 args=["run","--dir","C:\\teste-rdc","--model","mimo/mimo-auto","--format","json","--dangerously-skip-permissions","apaga os arquivos e faz oqta no txt"] process_role=main run_id=4d3d42c8-089c-4570-89b8-0828ae1fea09 mimocode
+INFO  2026-06-16T01:21:24 +33ms service=db path=C:\RemoteCode\.mimocode\data\mimocode.db opening database
+INFO  2026-06-16T01:21:24 +39ms service=db count=35 mode=bundled applying migrations
+INFO  2026-06-16T01:21:24 +17ms service=server-proxy directory=C:\teste-rdc creating instance
+INFO  2026-06-16T01:21:24 +9ms service=project directory=C:\teste-rdc fromDirectory
+INFO  2026-06-16T01:21:24 +244ms service=file init
+INFO  2026-06-16T01:21:24 +15ms service=actor.registry orphan recovery complete
+INFO  2026-06-16T01:21:24 +17ms service=inbox inbox gc-on-init complete
+INFO  2026-06-16T01:21:24 +104ms service=server-proxy directory=C:\teste-rdc bootstrapping
+INFO  2026-06-16T01:21:24 +15ms service=config path=C:\RemoteCode\.mimocode\config\config.json loading
+INFO  2026-06-16T01:21:24 +1ms service=config path=C:\RemoteCode\.mimocode\config\mimocode.json loading
+INFO  2026-06-16T01:21:24 +1ms service=config path=C:\RemoteCode\.mimocode\config\mimocode.jsonc loading
+INFO  2026-06-16T01:21:24 +41ms service=plugin name=y2 loading internal plugin
+INFO  2026-06-16T01:21:24 +1ms service=plugin name=E2 loading internal plugin
+INFO  2026-06-16T01:21:24 +0ms service=plugin name=b2 loading internal plugin
+INFO  2026-06-16T01:21:24 +0ms service=plugin name=T2 loading internal plugin
+INFO  2026-06-16T01:21:24 +1ms service=plugin name=l2 loading internal plugin
+INFO  2026-06-16T01:21:24 +0ms service=plugin name=Tu loading internal plugin
+INFO  2026-06-16T01:21:24 +1ms service=plugin name=cK loading internal plugin
+INFO  2026-06-16T01:21:24 +0ms service=plugin name=fu loading internal plugin
+INFO  2026-06-16T01:21:24 +0ms service=plugin name=Su loading internal plugin
+INFO  2026-06-16T01:21:24 +0ms service=plugin name=ou loading internal plugin
+INFO  2026-06-16T01:21:24 +0ms service=plugin name=au loading internal plugin
+INFO  2026-06-16T01:21:24 +1ms service=bus type=* subscribing
+INFO  2026-06-16T01:21:24 +3ms service=bus type=command.executed subscribing
+INFO  2026-06-16T01:21:24 +4ms service=lsp all LSPs are disabled
+INFO  2026-06-16T01:21:24 +1ms service=bus type=session.updated subscribing
+INFO  2026-06-16T01:21:24 +0ms service=bus type=message.updated subscribing
+INFO  2026-06-16T01:21:24 +0ms service=bus type=message.part.updated subscribing
+INFO  2026-06-16T01:21:24 +0ms service=bus type=session.diff subscribing
+INFO  2026-06-16T01:21:24 +0ms service=bus type=session.deleted subscribing
+INFO  2026-06-16T01:21:24 +1ms service=format all formatters are disabled
+INFO  2026-06-16T01:21:24 +0ms service=format init
+INFO  2026-06-16T01:21:24 +5ms service=file.watcher directory=C:\teste-rdc init
+INFO  2026-06-16T01:21:24 +60ms service=file.watcher directory=C:\teste-rdc platform=win32 backend=windows watcher backend
+INFO  2026-06-16T01:21:24 +4ms service=bus type=message.part.updated subscribing
+INFO  2026-06-16T01:21:24 +0ms service=bus type=message.part.removed subscribing
+INFO  2026-06-16T01:21:24 +9ms service=bus type=metrics.model_call subscribing
+INFO  2026-06-16T01:21:24 +1ms service=bus type=metrics.tool_call subscribing
+INFO  2026-06-16T01:21:24 +0ms service=bus type=metrics.agent_request subscribing
+INFO  2026-06-16T01:21:24 +44ms service=server method=POST path=/session request
+INFO  2026-06-16T01:21:24 +0ms service=server status=started method=POST path=/session request
+INFO  2026-06-16T01:21:24 +9ms service=session id=ses_131fb26ebffeANTUzb54zNOWTf slug=tidy-star version=0.1.1 projectID=ebc7ac43-db62-40d5-adf4-97698287f26b directory=C:\teste-rdc title=New session - 2026-06-16T01:21:24.757Z permission=[{"permission":"question","pattern":"*","action":"deny"},{"permission":"plan_enter","pattern":"*","action":"deny"},{"permission":"plan_exit","pattern":"*","action":"deny"}] time={"created":1781572884757,"updated":1781572884757} created
+INFO  2026-06-16T01:21:24 +4ms service=bus type=session.created publishing
+INFO  2026-06-16T01:21:24 +2ms service=bus type=actor.registered publishing
+INFO  2026-06-16T01:21:24 +1ms service=bus type=session.updated publishing
+INFO  2026-06-16T01:21:24 +1ms service=server status=completed duration=17 method=POST path=/session request
+INFO  2026-06-16T01:21:24 +1ms service=server method=GET path=/config request
+INFO  2026-06-16T01:21:24 +0ms service=server status=started method=GET path=/config request
+INFO  2026-06-16T01:21:24 +2ms service=server status=completed duration=2 method=GET path=/config request
+INFO  2026-06-16T01:21:24 +3ms service=server method=GET path=/event request
+INFO  2026-06-16T01:21:24 +0ms service=server status=started method=GET path=/event request
+INFO  2026-06-16T01:21:24 +0ms service=server method=POST path=/session/ses_131fb26ebffeANTUzb54zNOWTf/message request
+INFO  2026-06-16T01:21:24 +0ms service=server status=started method=POST path=/session/ses_131fb26ebffeANTUzb54zNOWTf/message request
+INFO  2026-06-16T01:21:24 +3ms service=server event connected
+INFO  2026-06-16T01:21:24 +4ms service=bus type=* subscribing
+INFO  2026-06-16T01:21:24 +20ms service=server status=completed duration=27 method=GET path=/event request
+INFO  2026-06-16T01:21:24 +1ms service=server status=completed duration=28 method=POST path=/session/ses_131fb26ebffeANTUzb54zNOWTf/message request
+INFO  2026-06-16T01:21:25 +277ms service=bus type=message.updated publishing
+INFO  2026-06-16T01:21:25 +11ms service=provider status=started state
+INFO  2026-06-16T01:21:25 +5ms service=bus type=message.part.updated publishing
+INFO  2026-06-16T01:21:25 +6ms service=bus type=session.updated publishing
+INFO  2026-06-16T01:21:25 +107ms service=provider init
+INFO  2026-06-16T01:21:25 +10ms service=bus type=session.status publishing
+INFO  2026-06-16T01:21:25 +3ms service=session.prompt session.id=ses_131fb26ebffeANTUzb54zNOWTf step=0 loop
+INFO  2026-06-16T01:21:25 +33ms service=auto-dream lastRunAgo=0d interval=7d auto-dream skipped — last run too recent
+INFO  2026-06-16T01:21:25 +1ms service=auto-dream lastRunAgo=0d interval=30d auto-distill skipped — last run too recent
+INFO  2026-06-16T01:21:25 +47ms service=provider providerID=xai found
+INFO  2026-06-16T01:21:25 +0ms service=provider providerID=mistral found
+INFO  2026-06-16T01:21:25 +0ms service=provider providerID=google found
+INFO  2026-06-16T01:21:25 +0ms service=provider providerID=openai found
+INFO  2026-06-16T01:21:25 +0ms service=provider providerID=xiaomi-token-plan-ams found
+INFO  2026-06-16T01:21:25 +0ms service=provider providerID=xiaomi found
+INFO  2026-06-16T01:21:25 +1ms service=provider providerID=anthropic found
+INFO  2026-06-16T01:21:25 +0ms service=provider providerID=cohere found
+INFO  2026-06-16T01:21:25 +0ms service=provider providerID=xiaomi-token-plan-cn found
+INFO  2026-06-16T01:21:25 +0ms service=provider providerID=deepseek found
+INFO  2026-06-16T01:21:25 +0ms service=provider providerID=xiaomi-token-plan-sgp found
+INFO  2026-06-16T01:21:25 +0ms service=provider providerID=mimo found
+INFO  2026-06-16T01:21:25 +0ms service=provider status=completed duration=213 state
+INFO  2026-06-16T01:21:25 +3ms service=bus type=message.updated publishing
+INFO  2026-06-16T01:21:25 +8ms service=llm providerID=mimo modelID=mimo-auto session.id=ses_131fb26ebffeANTUzb54zNOWTf small=true agent=title mode=subagent stream
+INFO  2026-06-16T01:21:25 +1ms service=provider status=started providerID=mimo getSDK
+INFO  2026-06-16T01:21:25 +1ms service=provider providerID=mimo pkg=@ai-sdk/openai-compatible using bundled provider
+INFO  2026-06-16T01:21:25 +5ms service=provider status=completed duration=6 providerID=mimo getSDK
+INFO  2026-06-16T01:21:25 +47ms service=vcs branch=master default_branch=master initialized
+INFO  2026-06-16T01:21:25 +0ms service=bus type=file.watcher.updated subscribing
+INFO  2026-06-16T01:21:25 +168ms service=server method=GET path=/session/status request
+INFO  2026-06-16T01:21:25 +0ms service=server status=started method=GET path=/session/status request
+INFO  2026-06-16T01:21:25 +3ms service=server status=completed duration=3 method=GET path=/session/status request
+INFO  2026-06-16T01:21:25 +103ms service=snapshot hash=01198ba60acbabfc8933105514e73d93030b85ad cwd=C:\teste-rdc git=C:\RemoteCode\.mimocode\data\snapshot\ebc7ac43-db62-40d5-adf4-97698287f26b\b9d70972a74a7363a77cfb3f61142e57a3e7f8e0 tracking
+INFO  2026-06-16T01:21:25 +6ms service=session.prompt status=started resolveTools
+INFO  2026-06-16T01:21:25 +110ms service=bash-tool shell=C:\WINDOWS\System32\WindowsPowerShell\v1.0\powershell.exe bash tool using shell
+INFO  2026-06-16T01:21:25 +6ms service=tool.registry status=started invalid
+INFO  2026-06-16T01:21:25 +1ms service=tool.registry status=completed duration=1 invalid
+INFO  2026-06-16T01:21:25 +0ms service=tool.registry status=started question
+INFO  2026-06-16T01:21:25 +0ms service=tool.registry status=completed duration=0 question
+INFO  2026-06-16T01:21:25 +0ms service=tool.registry status=started bash
+INFO  2026-06-16T01:21:25 +0ms service=tool.registry status=completed duration=0 bash
+INFO  2026-06-16T01:21:25 +0ms service=tool.registry status=started read
+INFO  2026-06-16T01:21:25 +0ms service=tool.registry status=completed duration=0 read
+INFO  2026-06-16T01:21:25 +0ms service=tool.registry status=started glob
+INFO  2026-06-16T01:21:25 +0ms service=tool.registry status=completed duration=0 glob
+INFO  2026-06-16T01:21:25 +0ms service=tool.registry status=started grep
+INFO  2026-06-16T01:21:25 +0ms service=tool.registry status=completed duration=0 grep
+INFO  2026-06-16T01:21:25 +0ms service=tool.registry status=started edit
+INFO  2026-06-16T01:21:25 +1ms service=tool.registry status=completed duration=1 edit
+INFO  2026-06-16T01:21:25 +0ms service=tool.registry status=started write
+INFO  2026-06-16T01:21:25 +0ms service=tool.registry status=completed duration=0 write
+INFO  2026-06-16T01:21:25 +0ms service=tool.registry status=started actor
+INFO  2026-06-16T01:21:25 +2ms service=tool.registry status=completed duration=2 actor
+INFO  2026-06-16T01:21:25 +0ms service=tool.registry status=started webfetch
+INFO  2026-06-16T01:21:25 +0ms service=tool.registry status=completed duration=0 webfetch
+INFO  2026-06-16T01:21:25 +0ms service=tool.registry status=started skill
+INFO  2026-06-16T01:21:25 +2ms service=tool.registry status=started change_directory
+INFO  2026-06-16T01:21:25 +0ms service=tool.registry status=completed duration=0 change_directory
+INFO  2026-06-16T01:21:25 +0ms service=tool.registry status=started plan_exit
+INFO  2026-06-16T01:21:25 +0ms service=tool.registry status=completed duration=0 plan_exit
+INFO  2026-06-16T01:21:25 +0ms service=tool.registry status=started memory
+INFO  2026-06-16T01:21:25 +1ms service=tool.registry status=completed duration=1 memory
+INFO  2026-06-16T01:21:25 +0ms service=tool.registry status=started history
+INFO  2026-06-16T01:21:25 +0ms service=tool.registry status=completed duration=0 history
+INFO  2026-06-16T01:21:25 +0ms service=tool.registry status=started task
+INFO  2026-06-16T01:21:25 +0ms service=tool.registry status=completed duration=0 task
+INFO  2026-06-16T01:21:25 +0ms service=tool.registry status=started workflow
+INFO  2026-06-16T01:21:25 +0ms service=tool.registry status=completed duration=0 workflow
+INFO  2026-06-16T01:21:25 +25ms service=skill count=15 init
+INFO  2026-06-16T01:21:25 +1ms service=tool.registry status=completed duration=29 skill
+INFO  2026-06-16T01:21:25 +9ms service=session.prompt status=completed duration=158 resolveTools
+INFO  2026-06-16T01:21:25 +8ms service=bus type=session.updated publishing
+INFO  2026-06-16T01:21:25 +18ms service=bus type=session.diff publishing
+INFO  2026-06-16T01:21:25 +2ms service=bus type=message.updated publishing
+INFO  2026-06-16T01:21:25 +10ms service=tool.registry status=started invalid
+INFO  2026-06-16T01:21:25 +0ms service=tool.registry status=completed duration=0 invalid
+INFO  2026-06-16T01:21:25 +0ms service=tool.registry status=started question
+INFO  2026-06-16T01:21:25 +0ms service=tool.registry status=completed duration=0 question
+INFO  2026-06-16T01:21:25 +0ms service=tool.registry status=started bash
+INFO  2026-06-16T01:21:25 +0ms service=tool.registry status=completed duration=0 bash
+INFO  2026-06-16T01:21:25 +1ms service=tool.registry status=started read
+INFO  2026-06-16T01:21:25 +0ms service=tool.registry status=completed duration=0 read
+INFO  2026-06-16T01:21:25 +0ms service=tool.registry status=started glob
+INFO  2026-06-16T01:21:25 +0ms service=tool.registry status=completed duration=0 glob
+INFO  2026-06-16T01:21:25 +0ms service=tool.registry status=started grep
+INFO  2026-06-16T01:21:25 +0ms service=tool.registry status=completed duration=0 grep
+INFO  2026-06-16T01:21:25 +0ms service=tool.registry status=started edit
+INFO  2026-06-16T01:21:25 +0ms service=tool.registry status=completed duration=0 edit
+INFO  2026-06-16T01:21:25 +0ms service=tool.registry status=started write
+INFO  2026-06-16T01:21:25 +0ms service=tool.registry status=completed duration=0 write
+INFO  2026-06-16T01:21:25 +0ms service=tool.registry status=started actor
+INFO  2026-06-16T01:21:25 +1ms service=tool.registry status=completed duration=1 actor
+INFO  2026-06-16T01:21:25 +0ms service=tool.registry status=started webfetch
+INFO  2026-06-16T01:21:25 +0ms service=tool.registry status=completed duration=0 webfetch
+INFO  2026-06-16T01:21:25 +0ms service=tool.registry status=started skill
+INFO  2026-06-16T01:21:25 +0ms service=tool.registry status=completed duration=0 skill
+INFO  2026-06-16T01:21:25 +0ms service=tool.registry status=started change_directory
+INFO  2026-06-16T01:21:25 +0ms service=tool.registry status=completed duration=0 change_directory
+INFO  2026-06-16T01:21:25 +0ms service=tool.registry status=started plan_exit
+INFO  2026-06-16T01:21:25 +0ms service=tool.registry status=completed duration=0 plan_exit
+INFO  2026-06-16T01:21:25 +0ms service=tool.registry status=started memory
+INFO  2026-06-16T01:21:25 +0ms service=tool.registry status=completed duration=0 memory
+INFO  2026-06-16T01:21:25 +1ms service=tool.registry status=started history
+INFO  2026-06-16T01:21:25 +0ms service=tool.registry status=completed duration=0 history
+INFO  2026-06-16T01:21:25 +0ms service=tool.registry status=started task
+INFO  2026-06-16T01:21:25 +0ms service=tool.registry status=completed duration=0 task
+INFO  2026-06-16T01:21:25 +0ms service=tool.registry status=started workflow
+INFO  2026-06-16T01:21:25 +0ms service=tool.registry status=completed duration=0 workflow
+INFO  2026-06-16T01:21:25 +4ms service=session.processor session.id=ses_131fb26ebffeANTUzb54zNOWTf messageID=msg_ece04db35001pP3Aosn68Zt9BN process
+INFO  2026-06-16T01:21:25 +2ms service=llm providerID=mimo modelID=mimo-auto session.id=ses_131fb26ebffeANTUzb54zNOWTf small=false agent=build mode=primary stream
+INFO  2026-06-16T01:21:25 +17ms service=bus type=session.status publishing
+INFO  2026-06-16T01:21:26 +428ms service=server method=GET path=/session/status request
+INFO  2026-06-16T01:21:26 +0ms service=server status=started method=GET path=/session/status request
+INFO  2026-06-16T01:21:26 +1ms service=server status=completed duration=1 method=GET path=/session/status request
+INFO  2026-06-16T01:21:26 +387ms service=history.backfill sessions=21 backfill complete
+INFO  2026-06-16T01:21:27 +373ms service=server method=GET path=/session/status request
+INFO  2026-06-16T01:21:27 +0ms service=server status=started method=GET path=/session/status request
+INFO  2026-06-16T01:21:27 +2ms service=server status=completed duration=2 method=GET path=/session/status request
+INFO  2026-06-16T01:21:27 +755ms service=server method=GET path=/session/status request
+INFO  2026-06-16T01:21:27 +0ms service=server status=started method=GET path=/session/status request
+INFO  2026-06-16T01:21:27 +2ms service=server status=completed duration=2 method=GET path=/session/status request
+INFO  2026-06-16T01:21:28 +749ms service=server method=GET path=/session/status request
+INFO  2026-06-16T01:21:28 +0ms service=server status=started method=GET path=/session/status request
+INFO  2026-06-16T01:21:28 +1ms service=server status=completed duration=1 method=GET path=/session/status request
+INFO  2026-06-16T01:21:29 +646ms service=bus type=message.part.updated publishing
+INFO  2026-06-16T01:21:29 +54ms service=bus type=message.part.updated publishing
+INFO  2026-06-16T01:21:29 +1ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:29 +12ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:29 +30ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:29 +4ms service=server method=GET path=/session/status request
+INFO  2026-06-16T01:21:29 +0ms service=server status=started method=GET path=/session/status request
+INFO  2026-06-16T01:21:29 +1ms service=server status=completed duration=1 method=GET path=/session/status request
+INFO  2026-06-16T01:21:29 +20ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:29 +18ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:29 +24ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:29 +28ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:29 +25ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:29 +123ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:29 +1ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:29 +0ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:29 +1ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:29 +1ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:29 +25ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:29 +48ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:29 +24ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:29 +24ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:29 +18ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:29 +28ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:29 +18ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:29 +26ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:29 +27ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:29 +50ms service=bus type=message.part.updated publishing
+INFO  2026-06-16T01:21:29 +1ms service=bus type=message.part.updated publishing
+INFO  2026-06-16T01:21:29 +93ms service=bus type=message.part.updated publishing
+INFO  2026-06-16T01:21:29 +5ms service=permission permission=read pattern=C:\teste-rdc action={"permission":"read","pattern":"*","action":"allow"} evaluated
+INFO  2026-06-16T01:21:29 +5ms service=bus type=metrics.tool_call publishing
+INFO  2026-06-16T01:21:29 +4ms service=bus type=message.part.updated publishing
+INFO  2026-06-16T01:21:30 +151ms service=server method=GET path=/session/status request
+INFO  2026-06-16T01:21:30 +0ms service=server status=started method=GET path=/session/status request
+INFO  2026-06-16T01:21:30 +2ms service=server status=completed duration=2 method=GET path=/session/status request
+INFO  2026-06-16T01:21:30 +5ms service=bus type=session.updated publishing
+INFO  2026-06-16T01:21:30 +120ms service=snapshot hash=01198ba60acbabfc8933105514e73d93030b85ad cwd=C:\teste-rdc git=C:\RemoteCode\.mimocode\data\snapshot\ebc7ac43-db62-40d5-adf4-97698287f26b\b9d70972a74a7363a77cfb3f61142e57a3e7f8e0 tracking
+INFO  2026-06-16T01:21:30 +2ms service=bus type=message.part.updated publishing
+INFO  2026-06-16T01:21:30 +1ms service=bus type=message.updated publishing
+INFO  2026-06-16T01:21:30 +275ms service=bus type=metrics.model_call publishing
+INFO  2026-06-16T01:21:30 +4ms service=bus type=message.updated publishing
+INFO  2026-06-16T01:21:30 +2ms service=bus type=session.status publishing
+INFO  2026-06-16T01:21:30 +1ms service=session.prompt session.id=ses_131fb26ebffeANTUzb54zNOWTf step=1 loop
+INFO  2026-06-16T01:21:30 +6ms service=bus type=message.updated publishing
+INFO  2026-06-16T01:21:30 +280ms service=snapshot hash=01198ba60acbabfc8933105514e73d93030b85ad cwd=C:\teste-rdc git=C:\RemoteCode\.mimocode\data\snapshot\ebc7ac43-db62-40d5-adf4-97698287f26b\b9d70972a74a7363a77cfb3f61142e57a3e7f8e0 tracking
+INFO  2026-06-16T01:21:30 +0ms service=session.prompt status=started resolveTools
+INFO  2026-06-16T01:21:30 +2ms service=tool.registry status=started invalid
+INFO  2026-06-16T01:21:30 +0ms service=tool.registry status=completed duration=0 invalid
+INFO  2026-06-16T01:21:30 +0ms service=tool.registry status=started question
+INFO  2026-06-16T01:21:30 +0ms service=tool.registry status=completed duration=0 question
+INFO  2026-06-16T01:21:30 +0ms service=tool.registry status=started bash
+INFO  2026-06-16T01:21:30 +0ms service=tool.registry status=completed duration=0 bash
+INFO  2026-06-16T01:21:30 +0ms service=tool.registry status=started read
+INFO  2026-06-16T01:21:30 +0ms service=tool.registry status=completed duration=0 read
+INFO  2026-06-16T01:21:30 +0ms service=tool.registry status=started glob
+INFO  2026-06-16T01:21:30 +0ms service=tool.registry status=completed duration=0 glob
+INFO  2026-06-16T01:21:30 +0ms service=tool.registry status=started grep
+INFO  2026-06-16T01:21:30 +0ms service=tool.registry status=completed duration=0 grep
+INFO  2026-06-16T01:21:30 +0ms service=tool.registry status=started edit
+INFO  2026-06-16T01:21:30 +0ms service=tool.registry status=completed duration=0 edit
+INFO  2026-06-16T01:21:30 +0ms service=tool.registry status=started write
+INFO  2026-06-16T01:21:30 +0ms service=tool.registry status=completed duration=0 write
+INFO  2026-06-16T01:21:30 +1ms service=tool.registry status=started actor
+INFO  2026-06-16T01:21:30 +0ms service=tool.registry status=completed duration=0 actor
+INFO  2026-06-16T01:21:30 +0ms service=tool.registry status=started webfetch
+INFO  2026-06-16T01:21:30 +0ms service=tool.registry status=completed duration=0 webfetch
+INFO  2026-06-16T01:21:30 +0ms service=tool.registry status=started skill
+INFO  2026-06-16T01:21:30 +0ms service=tool.registry status=completed duration=0 skill
+INFO  2026-06-16T01:21:30 +0ms service=tool.registry status=started change_directory
+INFO  2026-06-16T01:21:30 +0ms service=tool.registry status=completed duration=0 change_directory
+INFO  2026-06-16T01:21:30 +1ms service=tool.registry status=started plan_exit
+INFO  2026-06-16T01:21:30 +0ms service=tool.registry status=completed duration=0 plan_exit
+INFO  2026-06-16T01:21:30 +0ms service=tool.registry status=started memory
+INFO  2026-06-16T01:21:30 +0ms service=tool.registry status=completed duration=0 memory
+INFO  2026-06-16T01:21:30 +0ms service=tool.registry status=started history
+INFO  2026-06-16T01:21:30 +0ms service=tool.registry status=completed duration=0 history
+INFO  2026-06-16T01:21:30 +0ms service=tool.registry status=started task
+INFO  2026-06-16T01:21:30 +0ms service=tool.registry status=completed duration=0 task
+INFO  2026-06-16T01:21:30 +0ms service=tool.registry status=started workflow
+INFO  2026-06-16T01:21:30 +0ms service=tool.registry status=completed duration=0 workflow
+INFO  2026-06-16T01:21:30 +4ms service=session.prompt status=completed duration=8 resolveTools
+INFO  2026-06-16T01:21:30 +39ms service=tool.registry status=started invalid
+INFO  2026-06-16T01:21:30 +0ms service=tool.registry status=completed duration=0 invalid
+INFO  2026-06-16T01:21:30 +0ms service=tool.registry status=started question
+INFO  2026-06-16T01:21:30 +0ms service=tool.registry status=completed duration=0 question
+INFO  2026-06-16T01:21:30 +0ms service=tool.registry status=started bash
+INFO  2026-06-16T01:21:30 +0ms service=tool.registry status=completed duration=0 bash
+INFO  2026-06-16T01:21:30 +0ms service=tool.registry status=started read
+INFO  2026-06-16T01:21:30 +0ms service=tool.registry status=completed duration=0 read
+INFO  2026-06-16T01:21:30 +0ms service=tool.registry status=started glob
+INFO  2026-06-16T01:21:30 +0ms service=tool.registry status=completed duration=0 glob
+INFO  2026-06-16T01:21:30 +0ms service=tool.registry status=started grep
+INFO  2026-06-16T01:21:30 +1ms service=tool.registry status=completed duration=1 grep
+INFO  2026-06-16T01:21:30 +0ms service=tool.registry status=started edit
+INFO  2026-06-16T01:21:30 +0ms service=tool.registry status=completed duration=0 edit
+INFO  2026-06-16T01:21:30 +0ms service=tool.registry status=started write
+INFO  2026-06-16T01:21:30 +0ms service=tool.registry status=completed duration=0 write
+INFO  2026-06-16T01:21:30 +0ms service=tool.registry status=started actor
+INFO  2026-06-16T01:21:30 +0ms service=tool.registry status=completed duration=0 actor
+INFO  2026-06-16T01:21:30 +0ms service=tool.registry status=started webfetch
+INFO  2026-06-16T01:21:30 +0ms service=tool.registry status=completed duration=0 webfetch
+INFO  2026-06-16T01:21:30 +0ms service=tool.registry status=started skill
+INFO  2026-06-16T01:21:30 +1ms service=tool.registry status=completed duration=1 skill
+INFO  2026-06-16T01:21:30 +0ms service=tool.registry status=started change_directory
+INFO  2026-06-16T01:21:30 +0ms service=tool.registry status=completed duration=0 change_directory
+INFO  2026-06-16T01:21:30 +0ms service=tool.registry status=started plan_exit
+INFO  2026-06-16T01:21:30 +0ms service=tool.registry status=completed duration=0 plan_exit
+INFO  2026-06-16T01:21:30 +0ms service=tool.registry status=started memory
+INFO  2026-06-16T01:21:30 +0ms service=tool.registry status=completed duration=0 memory
+INFO  2026-06-16T01:21:30 +0ms service=tool.registry status=started history
+INFO  2026-06-16T01:21:30 +0ms service=tool.registry status=completed duration=0 history
+INFO  2026-06-16T01:21:30 +0ms service=tool.registry status=started task
+INFO  2026-06-16T01:21:30 +0ms service=tool.registry status=completed duration=0 task
+INFO  2026-06-16T01:21:30 +0ms service=tool.registry status=started workflow
+INFO  2026-06-16T01:21:30 +0ms service=tool.registry status=completed duration=0 workflow
+INFO  2026-06-16T01:21:30 +2ms service=session.processor session.id=ses_131fb26ebffeANTUzb54zNOWTf messageID=msg_ece04ef96001mZtHevPCo5nsFC process
+INFO  2026-06-16T01:21:30 +1ms service=llm providerID=mimo modelID=mimo-auto session.id=ses_131fb26ebffeANTUzb54zNOWTf small=false agent=build mode=primary stream
+INFO  2026-06-16T01:21:30 +1ms service=server method=GET path=/session/status request
+INFO  2026-06-16T01:21:30 +0ms service=server status=started method=GET path=/session/status request
+INFO  2026-06-16T01:21:30 +1ms service=server status=completed duration=1 method=GET path=/session/status request
+INFO  2026-06-16T01:21:30 +14ms service=bus type=session.status publishing
+INFO  2026-06-16T01:21:31 +136ms service=bus type=session.updated publishing
+INFO  2026-06-16T01:21:31 +3ms service=bus type=session.diff publishing
+INFO  2026-06-16T01:21:31 +181ms service=bus type=message.updated publishing
+INFO  2026-06-16T01:21:31 +430ms service=server method=GET path=/session/status request
+INFO  2026-06-16T01:21:31 +0ms service=server status=started method=GET path=/session/status request
+INFO  2026-06-16T01:21:31 +1ms service=server status=completed duration=1 method=GET path=/session/status request
+INFO  2026-06-16T01:21:32 +518ms service=bus type=message.part.updated publishing
+INFO  2026-06-16T01:21:32 +56ms service=bus type=message.part.updated publishing
+INFO  2026-06-16T01:21:32 +1ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:32 +23ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:32 +23ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:32 +26ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:32 +26ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:32 +26ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:32 +25ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:32 +25ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:32 +5ms service=server method=GET path=/session/status request
+INFO  2026-06-16T01:21:32 +0ms service=server status=started method=GET path=/session/status request
+INFO  2026-06-16T01:21:32 +1ms service=server status=completed duration=1 method=GET path=/session/status request
+INFO  2026-06-16T01:21:32 +110ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:32 +0ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:32 +1ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:32 +1ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:32 +24ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:32 +27ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:32 +26ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:32 +24ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:32 +27ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:32 +266ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:32 +1ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:32 +0ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:32 +1ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:32 +1ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:32 +4ms service=bus type=message.part.updated publishing
+INFO  2026-06-16T01:21:32 +2ms service=bus type=message.part.updated publishing
+INFO  2026-06-16T01:21:32 +81ms service=bus type=message.part.updated publishing
+INFO  2026-06-16T01:21:32 +2ms service=permission permission=read pattern=C:\teste-rdc\Novo(a) Text Document.txt action={"permission":"read","pattern":"*","action":"allow"} evaluated
+INFO  2026-06-16T01:21:32 +18ms service=bus type=metrics.tool_call publishing
+INFO  2026-06-16T01:21:32 +2ms service=bus type=message.part.updated publishing
+INFO  2026-06-16T01:21:32 +3ms service=lsp file=C:\teste-rdc\Novo(a) Text Document.txt touching file
+INFO  2026-06-16T01:21:33 +128ms service=server method=GET path=/session/status request
+INFO  2026-06-16T01:21:33 +0ms service=server status=started method=GET path=/session/status request
+INFO  2026-06-16T01:21:33 +2ms service=server status=completed duration=2 method=GET path=/session/status request
+INFO  2026-06-16T01:21:33 +152ms service=snapshot hash=01198ba60acbabfc8933105514e73d93030b85ad cwd=C:\teste-rdc git=C:\RemoteCode\.mimocode\data\snapshot\ebc7ac43-db62-40d5-adf4-97698287f26b\b9d70972a74a7363a77cfb3f61142e57a3e7f8e0 tracking
+INFO  2026-06-16T01:21:33 +1ms service=bus type=message.part.updated publishing
+INFO  2026-06-16T01:21:33 +1ms service=bus type=message.updated publishing
+INFO  2026-06-16T01:21:33 +273ms service=bus type=metrics.model_call publishing
+INFO  2026-06-16T01:21:33 +3ms service=bus type=message.updated publishing
+INFO  2026-06-16T01:21:33 +1ms service=bus type=session.status publishing
+INFO  2026-06-16T01:21:33 +1ms service=session.prompt session.id=ses_131fb26ebffeANTUzb54zNOWTf step=2 loop
+INFO  2026-06-16T01:21:33 +5ms service=bus type=message.updated publishing
+INFO  2026-06-16T01:21:33 +268ms service=snapshot hash=01198ba60acbabfc8933105514e73d93030b85ad cwd=C:\teste-rdc git=C:\RemoteCode\.mimocode\data\snapshot\ebc7ac43-db62-40d5-adf4-97698287f26b\b9d70972a74a7363a77cfb3f61142e57a3e7f8e0 tracking
+INFO  2026-06-16T01:21:33 +0ms service=session.prompt status=started resolveTools
+INFO  2026-06-16T01:21:33 +2ms service=tool.registry status=started invalid
+INFO  2026-06-16T01:21:33 +0ms service=tool.registry status=completed duration=0 invalid
+INFO  2026-06-16T01:21:33 +0ms service=tool.registry status=started question
+INFO  2026-06-16T01:21:33 +0ms service=tool.registry status=completed duration=0 question
+INFO  2026-06-16T01:21:33 +0ms service=tool.registry status=started bash
+INFO  2026-06-16T01:21:33 +0ms service=tool.registry status=completed duration=0 bash
+INFO  2026-06-16T01:21:33 +0ms service=tool.registry status=started read
+INFO  2026-06-16T01:21:33 +0ms service=tool.registry status=completed duration=0 read
+INFO  2026-06-16T01:21:33 +0ms service=tool.registry status=started glob
+INFO  2026-06-16T01:21:33 +0ms service=tool.registry status=completed duration=0 glob
+INFO  2026-06-16T01:21:33 +0ms service=tool.registry status=started grep
+INFO  2026-06-16T01:21:33 +0ms service=tool.registry status=completed duration=0 grep
+INFO  2026-06-16T01:21:33 +0ms service=tool.registry status=started edit
+INFO  2026-06-16T01:21:33 +0ms service=tool.registry status=completed duration=0 edit
+INFO  2026-06-16T01:21:33 +0ms service=tool.registry status=started write
+INFO  2026-06-16T01:21:33 +0ms service=tool.registry status=completed duration=0 write
+INFO  2026-06-16T01:21:33 +0ms service=tool.registry status=started actor
+INFO  2026-06-16T01:21:33 +1ms service=tool.registry status=completed duration=1 actor
+INFO  2026-06-16T01:21:33 +0ms service=tool.registry status=started webfetch
+INFO  2026-06-16T01:21:33 +0ms service=tool.registry status=completed duration=0 webfetch
+INFO  2026-06-16T01:21:33 +0ms service=tool.registry status=started skill
+INFO  2026-06-16T01:21:33 +0ms service=tool.registry status=completed duration=0 skill
+INFO  2026-06-16T01:21:33 +0ms service=tool.registry status=started change_directory
+INFO  2026-06-16T01:21:33 +0ms service=tool.registry status=completed duration=0 change_directory
+INFO  2026-06-16T01:21:33 +0ms service=tool.registry status=started plan_exit
+INFO  2026-06-16T01:21:33 +0ms service=tool.registry status=completed duration=0 plan_exit
+INFO  2026-06-16T01:21:33 +0ms service=tool.registry status=started memory
+INFO  2026-06-16T01:21:33 +1ms service=tool.registry status=completed duration=1 memory
+INFO  2026-06-16T01:21:33 +0ms service=tool.registry status=started history
+INFO  2026-06-16T01:21:33 +0ms service=tool.registry status=completed duration=0 history
+INFO  2026-06-16T01:21:33 +0ms service=tool.registry status=started task
+INFO  2026-06-16T01:21:33 +0ms service=tool.registry status=completed duration=0 task
+INFO  2026-06-16T01:21:33 +0ms service=tool.registry status=started workflow
+INFO  2026-06-16T01:21:33 +0ms service=tool.registry status=completed duration=0 workflow
+INFO  2026-06-16T01:21:33 +2ms service=session.prompt status=completed duration=6 resolveTools
+INFO  2026-06-16T01:21:33 +29ms service=tool.registry status=started invalid
+INFO  2026-06-16T01:21:33 +0ms service=tool.registry status=completed duration=0 invalid
+INFO  2026-06-16T01:21:33 +0ms service=tool.registry status=started question
+INFO  2026-06-16T01:21:33 +0ms service=tool.registry status=completed duration=0 question
+INFO  2026-06-16T01:21:33 +0ms service=tool.registry status=started bash
+INFO  2026-06-16T01:21:33 +0ms service=tool.registry status=completed duration=0 bash
+INFO  2026-06-16T01:21:33 +0ms service=tool.registry status=started read
+INFO  2026-06-16T01:21:33 +0ms service=tool.registry status=completed duration=0 read
+INFO  2026-06-16T01:21:33 +0ms service=tool.registry status=started glob
+INFO  2026-06-16T01:21:33 +1ms service=tool.registry status=completed duration=0 glob
+INFO  2026-06-16T01:21:33 +0ms service=tool.registry status=started grep
+INFO  2026-06-16T01:21:33 +0ms service=tool.registry status=completed duration=0 grep
+INFO  2026-06-16T01:21:33 +0ms service=tool.registry status=started edit
+INFO  2026-06-16T01:21:33 +0ms service=tool.registry status=completed duration=0 edit
+INFO  2026-06-16T01:21:33 +0ms service=tool.registry status=started write
+INFO  2026-06-16T01:21:33 +0ms service=tool.registry status=completed duration=0 write
+INFO  2026-06-16T01:21:33 +0ms service=tool.registry status=started actor
+INFO  2026-06-16T01:21:33 +0ms service=tool.registry status=completed duration=0 actor
+INFO  2026-06-16T01:21:33 +0ms service=tool.registry status=started webfetch
+INFO  2026-06-16T01:21:33 +0ms service=tool.registry status=completed duration=0 webfetch
+INFO  2026-06-16T01:21:33 +0ms service=tool.registry status=started skill
+INFO  2026-06-16T01:21:33 +0ms service=tool.registry status=completed duration=0 skill
+INFO  2026-06-16T01:21:33 +0ms service=tool.registry status=started change_directory
+INFO  2026-06-16T01:21:33 +1ms service=tool.registry status=completed duration=1 change_directory
+INFO  2026-06-16T01:21:33 +0ms service=tool.registry status=started plan_exit
+INFO  2026-06-16T01:21:33 +0ms service=tool.registry status=completed duration=0 plan_exit
+INFO  2026-06-16T01:21:33 +0ms service=tool.registry status=started memory
+INFO  2026-06-16T01:21:33 +0ms service=tool.registry status=completed duration=0 memory
+INFO  2026-06-16T01:21:33 +0ms service=tool.registry status=started history
+INFO  2026-06-16T01:21:33 +0ms service=tool.registry status=completed duration=0 history
+INFO  2026-06-16T01:21:33 +0ms service=tool.registry status=started task
+INFO  2026-06-16T01:21:33 +0ms service=tool.registry status=completed duration=0 task
+INFO  2026-06-16T01:21:33 +0ms service=tool.registry status=started workflow
+INFO  2026-06-16T01:21:33 +0ms service=tool.registry status=completed duration=0 workflow
+INFO  2026-06-16T01:21:33 +2ms service=session.processor session.id=ses_131fb26ebffeANTUzb54zNOWTf messageID=msg_ece04fb78001kMD8OzGJHqOtYU process
+INFO  2026-06-16T01:21:33 +1ms service=llm providerID=mimo modelID=mimo-auto session.id=ses_131fb26ebffeANTUzb54zNOWTf small=false agent=build mode=primary stream
+INFO  2026-06-16T01:21:33 +11ms service=bus type=session.status publishing
+INFO  2026-06-16T01:21:33 +2ms service=server method=GET path=/session/status request
+INFO  2026-06-16T01:21:33 +0ms service=server status=started method=GET path=/session/status request
+INFO  2026-06-16T01:21:33 +1ms service=server status=completed duration=1 method=GET path=/session/status request
+INFO  2026-06-16T01:21:34 +133ms service=bus type=session.updated publishing
+INFO  2026-06-16T01:21:34 +3ms service=bus type=session.diff publishing
+INFO  2026-06-16T01:21:34 +179ms service=bus type=message.updated publishing
+INFO  2026-06-16T01:21:34 +446ms service=server method=GET path=/session/status request
+INFO  2026-06-16T01:21:34 +0ms service=server status=started method=GET path=/session/status request
+INFO  2026-06-16T01:21:34 +2ms service=server status=completed duration=2 method=GET path=/session/status request
+INFO  2026-06-16T01:21:35 +760ms service=server method=GET path=/session/status request
+INFO  2026-06-16T01:21:35 +0ms service=server status=started method=GET path=/session/status request
+INFO  2026-06-16T01:21:35 +2ms service=server status=completed duration=1 method=GET path=/session/status request
+INFO  2026-06-16T01:21:35 +474ms service=bus type=message.part.updated publishing
+INFO  2026-06-16T01:21:35 +57ms service=bus type=message.part.updated publishing
+INFO  2026-06-16T01:21:35 +0ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:35 +28ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:35 +21ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:36 +23ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:36 +27ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:36 +24ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:36 +54ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:36 +24ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:36 +19ms service=server method=GET path=/session/status request
+INFO  2026-06-16T01:21:36 +0ms service=server status=started method=GET path=/session/status request
+INFO  2026-06-16T01:21:36 +2ms service=server status=completed duration=2 method=GET path=/session/status request
+INFO  2026-06-16T01:21:36 +68ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:36 +1ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:36 +0ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:36 +1ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:36 +29ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:36 +24ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:36 +50ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:36 +24ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:36 +28ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:36 +25ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:36 +25ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:36 +24ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:36 +25ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:36 +26ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:36 +26ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:36 +25ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:36 +24ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:36 +24ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:36 +21ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:36 +48ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:36 +1ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:36 +27ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:36 +24ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:36 +27ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:36 +25ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:36 +24ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:36 +25ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:36 +25ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:36 +29ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:36 +25ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:36 +6ms service=server method=GET path=/session/status request
+INFO  2026-06-16T01:21:36 +0ms service=server status=started method=GET path=/session/status request
+INFO  2026-06-16T01:21:36 +2ms service=server status=completed duration=2 method=GET path=/session/status request
+INFO  2026-06-16T01:21:36 +18ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:36 +23ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:36 +24ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:37 +24ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:37 +25ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:37 +24ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:37 +28ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:37 +24ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:37 +24ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:37 +23ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:37 +24ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:37 +24ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:37 +23ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:37 +24ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:37 +23ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:37 +23ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:37 +25ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:37 +23ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:37 +23ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:37 +25ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:37 +26ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:37 +21ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:37 +23ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:37 +24ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:37 +24ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:37 +26ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:37 +23ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:37 +27ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:37 +19ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:37 +27ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:37 +21ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:37 +23ms service=server method=GET path=/session/status request
+INFO  2026-06-16T01:21:37 +0ms service=server status=started method=GET path=/session/status request
+INFO  2026-06-16T01:21:37 +2ms service=server status=completed duration=1 method=GET path=/session/status request
+INFO  2026-06-16T01:21:37 +0ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:37 +20ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:37 +27ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:37 +14ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:37 +29ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:37 +23ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:37 +24ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:37 +24ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:37 +22ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:37 +23ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:37 +25ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:37 +24ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:37 +25ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:37 +25ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:38 +21ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:38 +24ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:38 +25ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:38 +22ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:38 +24ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:38 +24ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:38 +25ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:38 +25ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:38 +22ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:38 +22ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:38 +25ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:38 +22ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:38 +21ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:38 +23ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:38 +23ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:38 +23ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:38 +23ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:38 +23ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:38 +23ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:38 +1ms service=server method=GET path=/session/status request
+INFO  2026-06-16T01:21:38 +0ms service=server status=started method=GET path=/session/status request
+INFO  2026-06-16T01:21:38 +2ms service=server status=completed duration=2 method=GET path=/session/status request
+INFO  2026-06-16T01:21:38 +22ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:38 +23ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:38 +22ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:38 +25ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:38 +25ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:38 +23ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:38 +24ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:38 +20ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:38 +23ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:38 +22ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:38 +23ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:38 +27ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:38 +21ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:38 +21ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:38 +23ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:38 +23ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:38 +19ms service=bus type=message.part.updated publishing
+INFO  2026-06-16T01:21:38 +2ms service=bus type=message.part.updated publishing
+INFO  2026-06-16T01:21:38 +0ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:38 +40ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:38 +22ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:38 +24ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:38 +23ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:38 +22ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:38 +26ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:38 +23ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:39 +21ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:39 +23ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:39 +23ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:39 +22ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:39 +23ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:39 +22ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:39 +23ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:39 +22ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:39 +15ms service=server method=GET path=/session/status request
+INFO  2026-06-16T01:21:39 +0ms service=server status=started method=GET path=/session/status request
+INFO  2026-06-16T01:21:39 +1ms service=server status=completed duration=1 method=GET path=/session/status request
+INFO  2026-06-16T01:21:39 +7ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:39 +23ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:39 +22ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:39 +25ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:39 +20ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:39 +23ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:39 +23ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:39 +21ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:39 +23ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:39 +22ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:39 +22ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:39 +22ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:39 +25ms service=bus type=message.part.delta publishing
+INFO  2026-06-16T01:21:39 +2ms service=bus type=message.part.updated publishing
+INFO  2026-06-16T01:21:39 +288ms service=snapshot hash=01198ba60acbabfc8933105514e73d93030b85ad cwd=C:\teste-rdc git=C:\RemoteCode\.mimocode\data\snapshot\ebc7ac43-db62-40d5-adf4-97698287f26b\b9d70972a74a7363a77cfb3f61142e57a3e7f8e0 tracking
+INFO  2026-06-16T01:21:39 +1ms service=bus type=message.part.updated publishing
+INFO  2026-06-16T01:21:39 +1ms service=bus type=message.updated publishing
+INFO  2026-06-16T01:21:39 +182ms service=server method=GET path=/session/status request
+INFO  2026-06-16T01:21:39 +0ms service=server status=started method=GET path=/session/status request
+INFO  2026-06-16T01:21:39 +1ms service=server status=completed duration=1 method=GET path=/session/status request
+INFO  2026-06-16T01:21:40 +96ms service=bus type=metrics.model_call publishing

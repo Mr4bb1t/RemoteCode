@@ -276,7 +276,7 @@ class _EditableViewState extends State<_EditableView> {
 
   static const double _fontSize = 13.0;
   static const double _lineHeight = 1.5;
-  static const double _lineHeightPx = _fontSize * _lineHeight; // 19.5
+  static const double _lineHeightPx = _fontSize * _lineHeight;
   static const double _verticalPadding = 16.0;
   static const double _gutterWidth = 44.0;
   static const double _dividerWidth = 1.0;
@@ -314,42 +314,48 @@ class _EditableViewState extends State<_EditableView> {
     super.dispose();
   }
 
+  Widget _buildLineNumbers() {
+    return ListenableBuilder(
+      listenable: _scrollController,
+      builder: (context, _) {
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 4),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: List.generate(
+              _lineCount,
+              (i) => SizedBox(
+                height: _lineHeightPx,
+                child: Text(
+                  '${i + 1}',
+                  style: GoogleFonts.firaCode(
+                    fontSize: _fontSize,
+                    color: RdcTheme.textMuted,
+                    height: _lineHeight,
+                  ),
+                  textAlign: TextAlign.right,
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // ── Calha dos números de linha ─────────────────────────────
         SizedBox(
           width: _gutterWidth,
-          child: ScrollConfiguration(
-            behavior: const _NoBounceScrollBehavior(),
-            child: SingleChildScrollView(
-              controller: _scrollController,
-              physics: const NeverScrollableScrollPhysics(), // escravo do scrollController
-              padding: EdgeInsets.only(
-                top: _verticalPadding,
-                bottom: _verticalPadding,
-                left: 4,
-                right: 6,
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: List.generate(
-                  _lineCount,
-                  (i) => SizedBox(
-                    height: _lineHeightPx,
-                    child: Text(
-                      '${i + 1}',
-                      style: GoogleFonts.firaCode(
-                        fontSize: _fontSize,
-                        color: RdcTheme.textMuted,
-                        height: _lineHeight,
-                      ),
-                      textAlign: TextAlign.right,
-                    ),
-                  ),
-                ),
+          child: ClipRect(
+            child: Padding(
+              padding: const EdgeInsets.only(top: _verticalPadding, bottom: _verticalPadding),
+              child: Transform.translate(
+                offset: Offset(0, -(_scrollController.hasClients ? _scrollController.offset : 0.0)),
+                child: _buildLineNumbers(),
               ),
             ),
           ),
@@ -357,14 +363,13 @@ class _EditableViewState extends State<_EditableView> {
 
         Container(width: _dividerWidth, color: RdcTheme.bg500),
 
-        // ── Campo de texto ─────────────────────────────────────────
         Expanded(
           child: ScrollConfiguration(
             behavior: const _NoBounceScrollBehavior(),
             child: SingleChildScrollView(
               controller: _scrollController,
               physics: const ClampingScrollPhysics(),
-              padding: EdgeInsets.only(
+              padding: const EdgeInsets.only(
                 top: _verticalPadding,
                 bottom: _verticalPadding,
               ),
@@ -372,12 +377,11 @@ class _EditableViewState extends State<_EditableView> {
                 scrollDirection: Axis.horizontal,
                 physics: const ClampingScrollPhysics(),
                 child: SizedBox(
-                  width: 3000, // Largura suficiente para evitar quebra de linha
+                  width: 3000,
                   child: IntrinsicHeight(
                     child: TextField(
                       controller: widget.controller,
                       maxLines: null,
-                      // NÃO use expands: true aqui — conflita com SingleChildScrollView
                       onChanged: widget.onChanged,
                       keyboardType: TextInputType.multiline,
                       style: GoogleFonts.firaCode(
@@ -388,7 +392,7 @@ class _EditableViewState extends State<_EditableView> {
                       strutStyle: const StrutStyle(
                         fontSize: _fontSize,
                         height: _lineHeight,
-                        forceStrutHeight: true, // <-- CRÍTICO: garante altura de linha exata
+                        forceStrutHeight: true,
                       ),
                       decoration: const InputDecoration(
                         contentPadding: EdgeInsets.symmetric(horizontal: 8),

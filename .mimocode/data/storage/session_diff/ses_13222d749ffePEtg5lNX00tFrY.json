@@ -1,0 +1,30 @@
+[
+  {
+    "file": "__pycache__/app.cpython-311.pyc",
+    "patch": "",
+    "additions": 0,
+    "deletions": 0,
+    "status": "added"
+  },
+  {
+    "file": "app.py",
+    "patch": "Index: app.py\n===================================================================\n--- app.py\t\n+++ app.py\t\n@@ -0,0 +1,31 @@\n+import os\n+from flask import Flask, render_template, send_file\n+\n+app = Flask(__name__)\n+\n+INSTALLER_DIR = os.path.join(os.path.dirname(__file__), \"installer\")\n+\n+\n+@app.route(\"/\")\n+def index():\n+    files = []\n+    if os.path.isdir(INSTALLER_DIR):\n+        files = [\n+            f\n+            for f in os.listdir(INSTALLER_DIR)\n+            if os.path.isfile(os.path.join(INSTALLER_DIR, f))\n+        ]\n+    return render_template(\"index.html\", files=files)\n+\n+\n+@app.route(\"/download/<filename>\")\n+def download(filename):\n+    return send_file(\n+        os.path.join(INSTALLER_DIR, filename),\n+        as_attachment=True,\n+    )\n+\n+\n+if __name__ == \"__main__\":\n+    os.makedirs(INSTALLER_DIR, exist_ok=True)\n+    app.run(debug=True)\n",
+    "additions": 31,
+    "deletions": 0,
+    "status": "added"
+  },
+  {
+    "file": "requirements.txt",
+    "patch": "Index: requirements.txt\n===================================================================\n--- requirements.txt\t\n+++ requirements.txt\t\n@@ -0,0 +1,1 @@\n+flask==3.1.1\n",
+    "additions": 1,
+    "deletions": 0,
+    "status": "added"
+  },
+  {
+    "file": "templates/index.html",
+    "patch": "Index: templates/index.html\n===================================================================\n--- templates/index.html\t\n+++ templates/index.html\t\n@@ -0,0 +1,35 @@\n+<!DOCTYPE html>\n+<html lang=\"pt-BR\">\n+<head>\n+    <meta charset=\"UTF-8\">\n+    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n+    <title>Download - Instalador</title>\n+    <style>\n+        * { margin: 0; padding: 0; box-sizing: border-box; }\n+        body { font-family: 'Segoe UI', sans-serif; background: #0f0f0f; color: #e0e0e0; min-height: 100vh; display: flex; justify-content: center; align-items: center; }\n+        .container { background: #1a1a2e; border-radius: 16px; padding: 48px; max-width: 520px; width: 90%; box-shadow: 0 8px 32px rgba(0,0,0,0.4); text-align: center; }\n+        h1 { font-size: 1.8rem; margin-bottom: 8px; color: #ffffff; }\n+        .subtitle { color: #888; margin-bottom: 32px; }\n+        .file-list { list-style: none; }\n+        .file-list li { margin-bottom: 12px; }\n+        .file-list a { display: inline-block; background: #16213e; color: #00d4ff; text-decoration: none; padding: 12px 28px; border-radius: 8px; font-size: 1rem; transition: background 0.2s; }\n+        .file-list a:hover { background: #1a1a4e; }\n+        .empty { color: #666; font-style: italic; }\n+    </style>\n+</head>\n+<body>\n+    <div class=\"container\">\n+        <h1>Instalador</h1>\n+        <p class=\"subtitle\">Baixe o instalador mais recente</p>\n+        {% if files %}\n+        <ul class=\"file-list\">\n+            {% for file in files %}\n+            <li><a href=\"/download/{{ file }}\">{{ file }}</a></li>\n+            {% endfor %}\n+        </ul>\n+        {% else %}\n+        <p class=\"empty\">Nenhum instalador disponivel no momento.</p>\n+        {% endif %}\n+    </div>\n+</body>\n+</html>\n",
+    "additions": 35,
+    "deletions": 0,
+    "status": "added"
+  }
+]

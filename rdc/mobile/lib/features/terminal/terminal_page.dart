@@ -101,102 +101,6 @@ class _TerminalPageState extends State<TerminalPage> with AutomaticKeepAliveClie
     super.dispose();
   }
 
-  String? _mainFile;
-
-  void _selectMainFile() {
-    final ctrl = TextEditingController(text: _mainFile);
-    showDialog(
-      context: context,
-      builder: (c) => AlertDialog(
-        backgroundColor: RdcTheme.bg800,
-        title: Text('Arquivo Principal', style: GoogleFonts.inter(color: Colors.white, fontSize: 16)),
-        content: TextField(
-          controller: ctrl,
-          style: GoogleFonts.firaCode(color: Colors.white, fontSize: 13),
-          decoration: const InputDecoration(
-            hintText: 'ex: lib/main.dart ou app.py', 
-            hintStyle: TextStyle(color: Colors.white54),
-            enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: RdcTheme.bg500)),
-            focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: RdcTheme.primary)),
-          ),
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(c), child: const Text('Cancelar', style: TextStyle(color: Colors.white70))),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: RdcTheme.primary),
-            onPressed: () {
-              setState(() => _mainFile = ctrl.text.trim());
-              Navigator.pop(c);
-            },
-            child: const Text('Salvar', style: TextStyle(color: Colors.white)),
-          ),
-        ],
-      ),
-    );
-  }
-
-  List<Widget> _buildQuickCommands() {
-    final file = _mainFile!;
-    final ext = file.split('.').last.toLowerCase();
-    
-    List<Widget> btns = [];
-    
-    Widget btn(String label, String cmd, Color color) {
-      return Padding(
-        padding: const EdgeInsets.only(right: 8),
-        child: ElevatedButton(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: color,
-            foregroundColor: Colors.white,
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 0),
-            minimumSize: const Size(0, 26),
-          ),
-          onPressed: () => _send(cmd),
-          child: Text(label, style: GoogleFonts.firaCode(fontSize: 11, fontWeight: FontWeight.bold)),
-        ),
-      );
-    }
-
-    btns.add(
-      Padding(
-        padding: const EdgeInsets.only(right: 12),
-        child: InkWell(
-          onTap: _selectMainFile,
-          borderRadius: BorderRadius.circular(4),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-            child: Row(children: [
-              const Icon(Icons.edit_document, size: 14, color: RdcTheme.primary),
-              const SizedBox(width: 6),
-              Text(file.isEmpty ? 'Definir' : file, style: GoogleFonts.firaCode(fontSize: 12, color: RdcTheme.primary)),
-            ]),
-          ),
-        ),
-      )
-    );
-
-    if (file.isEmpty) return btns;
-
-    if (ext == 'dart') {
-      btns.add(btn('▶ Run', 'flutter run -t $file', RdcTheme.success));
-      btns.add(btn('⚡ Reload', 'r', RdcTheme.info));
-      btns.add(btn('🔄 Restart', 'R', RdcTheme.warning));
-      btns.add(btn('🛑 Stop', 'q', RdcTheme.danger));
-    } else if (ext == 'py') {
-      btns.add(btn('▶ Run', 'python $file', RdcTheme.success));
-      btns.add(btn('📦 reqs', 'pip install -r requirements.txt', RdcTheme.info));
-    } else if (ext == 'js' || ext == 'ts') {
-      final isTs = ext == 'ts';
-      btns.add(btn('▶ Run', isTs ? 'npx ts-node $file' : 'node $file', RdcTheme.success));
-      btns.add(btn('📦 install', 'npm install', RdcTheme.info));
-      btns.add(btn('▶ start', 'npm start', RdcTheme.warning));
-    } else {
-      btns.add(btn('▶ Run', './$file', RdcTheme.success));
-    }
-
-    return btns;
-  }
-
   @override
   Widget build(BuildContext context) {
     super.build(context);
@@ -255,34 +159,6 @@ class _TerminalPageState extends State<TerminalPage> with AutomaticKeepAliveClie
             ),
           ]),
         ),
-
-        // Comandos Específicos
-        if (_mainFile != null && _mainFile!.isNotEmpty)
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            color: RdcTheme.bg800,
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(children: _buildQuickCommands()),
-            ),
-          )
-        else
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            color: RdcTheme.bg800,
-            child: GestureDetector(
-              onTap: _selectMainFile,
-              child: Row(
-                children: [
-                  const Icon(Icons.warning_amber_rounded, size: 16, color: RdcTheme.warning),
-                  const SizedBox(width: 8),
-                  Text('Nenhum arquivo principal selecionado. Toque para definir.', 
-                    style: GoogleFonts.inter(fontSize: 12, color: RdcTheme.warning)),
-                ],
-              ),
-            ),
-          ),
 
         // Output do terminal
         Expanded(

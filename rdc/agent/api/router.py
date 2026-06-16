@@ -14,6 +14,7 @@ from api.tests import router as tests_router
 from api.preview import router as preview_router
 from api.mimo import router as mimo_router
 from api.settings import router as settings_router
+from api.processes import router as processes_router
 
 router = APIRouter()
 
@@ -26,3 +27,4 @@ router.include_router(tests_router)
 router.include_router(preview_router)
 router.include_router(mimo_router)
 router.include_router(settings_router)
+router.include_router(processes_router)

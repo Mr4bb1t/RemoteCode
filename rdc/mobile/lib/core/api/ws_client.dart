@@ -18,6 +18,7 @@ class WsClient {
   final OnMessage onMessage;
   final OnError? onError;
   final OnDone? onDone;
+  final bool _autoReconnect;
 
   WebSocketChannel? _channel;
   StreamSubscription? _subscription;
@@ -32,7 +33,8 @@ class WsClient {
     required this.onMessage,
     this.onError,
     this.onDone,
-  });
+    bool autoReconnect = true,
+  }) : _autoReconnect = autoReconnect;
 
   Future<void> connect() async {
     _intentionalClose = false;
@@ -96,7 +98,7 @@ class WsClient {
   }
 
   void _scheduleReconnect() {
-    if (_intentionalClose || _reconnectAttempts >= _maxReconnectAttempts) return;
+    if (!_autoReconnect || _intentionalClose || _reconnectAttempts >= _maxReconnectAttempts) return;
     _reconnectAttempts++;
     Future.delayed(_reconnectDelay, _doConnect);
   }

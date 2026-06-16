@@ -1,0 +1,30 @@
+[
+  {
+    "file": "backend/__pycache__/app.cpython-311.pyc",
+    "patch": "",
+    "additions": 0,
+    "deletions": 0,
+    "status": "added"
+  },
+  {
+    "file": "backend/__pycache__/test_app.cpython-311-pytest-9.1.0.pyc",
+    "patch": "",
+    "additions": 0,
+    "deletions": 0,
+    "status": "added"
+  },
+  {
+    "file": "backend/requirements.txt",
+    "patch": "Index: backend/requirements.txt\n===================================================================\n--- backend/requirements.txt\t\n+++ backend/requirements.txt\t\n@@ -1,1 +1,2 @@\n flask\n+pytest\n",
+    "additions": 1,
+    "deletions": 0,
+    "status": "modified"
+  },
+  {
+    "file": "backend/test_app.py",
+    "patch": "Index: backend/test_app.py\n===================================================================\n--- backend/test_app.py\t\n+++ backend/test_app.py\t\n@@ -0,0 +1,66 @@\n+import os\n+import tempfile\n+import shutil\n+import pytest\n+from app import app, INSTALLERS_DIR\n+\n+\n+@pytest.fixture\n+def client():\n+    app.config['TESTING'] = True\n+    with app.test_client() as client:\n+        yield client\n+\n+\n+@pytest.fixture(autouse=True)\n+def ensure_installers_dir(tmp_path, monkeypatch):\n+    monkeypatch.setattr('app.INSTALLERS_DIR', str(tmp_path))\n+    return tmp_path\n+\n+\n+def test_index_returns_200(client):\n+    response = client.get('/')\n+    assert response.status_code == 200\n+\n+\n+def test_index_contains_title(client):\n+    response = client.get('/')\n+    assert 'Instalador' in response.data.decode()\n+\n+\n+def test_index_empty_dir(client):\n+    response = client.get('/')\n+    assert 'Nenhum instalador disponivel' in response.data.decode()\n+\n+\n+def test_index_lists_files(client, ensure_installers_dir):\n+    (ensure_installers_dir / 'test.exe').touch()\n+    (ensure_installers_dir / 'setup.msi').touch()\n+    response = client.get('/')\n+    data = response.data.decode()\n+    assert 'test.exe' in data\n+    assert 'setup.msi' in data\n+\n+\n+def test_download_file(client, ensure_installers_dir):\n+    (ensure_installers_dir / 'installer.exe').write_bytes(b'fake binary')\n+    response = client.get('/download/installer.exe')\n+    assert response.status_code == 200\n+    assert response.data == b'fake binary'\n+\n+\n+def test_download_sets_attachment(client, ensure_installers_dir):\n+    (ensure_installers_dir / 'installer.exe').touch()\n+    response = client.get('/download/installer.exe')\n+    assert 'attachment' in response.headers.get('Content-Disposition', '')\n+\n+\n+def test_download_nonexistent_returns_404(client):\n+    response = client.get('/download/nonexistent.exe')\n+    assert response.status_code == 404\n+\n+\n+def test_index_skips_directories(client, ensure_installers_dir):\n+    (ensure_installers_dir / 'subdir').mkdir()\n+    response = client.get('/')\n+    assert 'subdir' not in response.data.decode()\n",
+    "additions": 66,
+    "deletions": 0,
+    "status": "added"
+  }
+]

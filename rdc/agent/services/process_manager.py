@@ -34,12 +34,24 @@ async def start_process(
     cwd: str,
 ) -> "ManagedProcess":
     """Inicia um processo e registra."""
-    proc = await asyncio.create_subprocess_exec(
-        *command,
-        cwd=cwd,
-        stdout=asyncio.subprocess.PIPE,
-        stderr=asyncio.subprocess.STDOUT,
-    )
+    import platform
+    is_windows = platform.system() == "Windows"
+    
+    if is_windows:
+        # No Windows, usar shell=True permite encontrar comandos como 'npm' ou 'flutter' sem .cmd
+        proc = await asyncio.create_subprocess_shell(
+            " ".join(command),
+            cwd=cwd,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.STDOUT,
+        )
+    else:
+        proc = await asyncio.create_subprocess_exec(
+            *command,
+            cwd=cwd,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.STDOUT,
+        )
     mp = ManagedProcess(process_id=process_id, command=" ".join(command), cwd=cwd, process=proc)
     _processes[process_id] = mp
     return mp
@@ -94,19 +106,36 @@ async def run_and_collect(command: list[str], cwd: str, timeout: int = 300) -> t
 
 def kill_process(process_id: str) -> bool:
     mp = _processes.get(process_id)
-    if mp and mp.is_running and mp.process:
+    if mp and mp.process:
         try:
-            mp.process.terminate()
+            import platform
+            if platform.system() == "Windows":
+                import subprocess
+                res = subprocess.run(["taskkill", "/F", "/T", "/PID", str(mp.process.pid)], capture_output=True, text=True)
+                print(f"[RDC] taskkill output: {res.stdout} {res.stderr}")
+                try:
+                    mp.process.terminate()
+                except Exception:
+                    pass
+            else:
+                mp.process.terminate()
             return True
-        except Exception:
+        except Exception as e:
+            print(f"[RDC] Erro ao matar processo: {e}")
             return False
     return False
 
 def kill_all_processes() -> None:
+    import platform
+    is_windows = platform.system() == "Windows"
     for mp in _processes.values():
         if mp.is_running and mp.process:
             try:
-                mp.process.terminate()
+                if is_windows:
+                    import subprocess
+                    subprocess.run(["taskkill", "/F", "/T", "/PID", str(mp.process.pid)], capture_output=True)
+                else:
+                    mp.process.terminate()
             except Exception:
                 pass
 

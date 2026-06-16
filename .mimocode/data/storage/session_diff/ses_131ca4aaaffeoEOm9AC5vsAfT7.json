@@ -1,0 +1,23 @@
+[
+  {
+    "file": "backend/__pycache__/app.cpython-311.pyc",
+    "patch": "",
+    "additions": 0,
+    "deletions": 0,
+    "status": "added"
+  },
+  {
+    "file": "backend/__pycache__/test_app.cpython-311-pytest-9.1.0.pyc",
+    "patch": "",
+    "additions": 0,
+    "deletions": 0,
+    "status": "added"
+  },
+  {
+    "file": "backend/test_app.py",
+    "patch": "Index: backend/test_app.py\n===================================================================\n--- backend/test_app.py\t\n+++ backend/test_app.py\t\n@@ -0,0 +1,78 @@\n+import os\n+import tempfile\n+import pytest\n+from app import app, INSTALLERS_DIR\n+\n+\n+@pytest.fixture\n+def client():\n+    app.config['TESTING'] = True\n+    with app.test_client() as client:\n+        yield client\n+\n+\n+@pytest.fixture\n+def installers_dir():\n+    with tempfile.TemporaryDirectory() as tmpdir:\n+        original = app.config.get('INSTALLERS_DIR')\n+        # Patch INSTALLERS_DIR at module level\n+        import app as app_module\n+        old_dir = app_module.INSTALLERS_DIR\n+        app_module.INSTALLERS_DIR = tmpdir\n+        yield tmpdir\n+        app_module.INSTALLERS_DIR = old_dir\n+\n+\n+def test_index_empty(client, installers_dir):\n+    response = client.get('/')\n+    assert response.status_code == 200\n+    assert b'NENHUM ARQUIVO DISPONIVEL' in response.data\n+\n+\n+def test_index_with_files(client, installers_dir):\n+    with open(os.path.join(installers_dir, 'test.exe'), 'w') as f:\n+        f.write('fake installer')\n+    with open(os.path.join(installers_dir, 'test2.msi'), 'w') as f:\n+        f.write('fake installer 2')\n+\n+    response = client.get('/')\n+    assert response.status_code == 200\n+    assert b'test.exe' in response.data\n+    assert b'test2.msi' in response.data\n+\n+\n+def test_index_ignores_directories(client, installers_dir):\n+    os.makedirs(os.path.join(installers_dir, 'subdir'))\n+    with open(os.path.join(installers_dir, 'file.txt'), 'w') as f:\n+        f.write('file')\n+\n+    response = client.get('/')\n+    assert response.status_code == 200\n+    assert b'file.txt' in response.data\n+    assert b'subdir' not in response.data\n+\n+\n+def test_download_file(client, installers_dir):\n+    filepath = os.path.join(installers_dir, 'installer.exe')\n+    with open(filepath, 'w') as f:\n+        f.write('binary content')\n+\n+    response = client.get('/download/installer.exe')\n+    assert response.status_code == 200\n+    assert response.data == b'binary content'\n+    assert response.headers['Content-Disposition'] == 'attachment; filename=installer.exe'\n+\n+\n+def test_download_nonexistent(client, installers_dir):\n+    response = client.get('/download/doesnotexist.exe')\n+    assert response.status_code == 404\n+\n+\n+def test_index_returns_200(client, installers_dir):\n+    response = client.get('/')\n+    assert response.status_code == 200\n+\n+\n+def test_download_with_subdirectory_in_name(client, installers_dir):\n+    response = client.get('/download/subdir%2Ffile.exe')\n+    assert response.status_code in (400, 404)\n",
+    "additions": 78,
+    "deletions": 0,
+    "status": "added"
+  }
+]

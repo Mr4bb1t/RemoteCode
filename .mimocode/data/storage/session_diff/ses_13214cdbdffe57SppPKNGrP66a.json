@@ -1,0 +1,23 @@
+[
+  {
+    "file": "backend/app.py",
+    "patch": "Index: backend/app.py\n===================================================================\n--- backend/app.py\t\n+++ backend/app.py\t\n@@ -0,0 +1,24 @@\n+from flask import Flask, send_file, render_template, send_from_directory\r\n+import os\r\n+\r\n+app = Flask(__name__, template_folder='../frontend')\r\n+\r\n+@app.route('/')\r\n+def index():\r\n+    return render_template('index.html')\r\n+\r\n+@app.route('/download')\r\n+def download_installer():\r\n+    path = \"path/to/installer\"\r\n+    return send_file(path, as_attachment=True)\r\n+\r\n+@app.route('/styles/<path:filename>')\r\n+def styles(filename):\r\n+    return send_from_directory('../frontend/styles', filename)\r\n+\r\n+@app.route('/teste')\r\n+def teste():\r\n+    return {\"status\": \"ok\", \"mensagem\": \"rota de teste funcionando\"}\r\n+\r\n+if __name__ == \"__main__\":\r\n+    app.run(debug=True)\r\n",
+    "additions": 24,
+    "deletions": 0,
+    "status": "added"
+  },
+  {
+    "file": "frontend/index.html",
+    "patch": "Index: frontend/index.html\n===================================================================\n--- frontend/index.html\t\n+++ frontend/index.html\t\n@@ -0,0 +1,21 @@\n+<!DOCTYPE html>\r\n+<html lang=\"en\">\r\n+<head>\r\n+    <meta charset=\"UTF-8\">\r\n+    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\r\n+    <title>Download Installer</title>\r\n+    <link rel=\"stylesheet\" href=\"styles/style.css\">\r\n+</head>\r\n+<body>\r\n+    <div class=\"container\">\r\n+        <h1>Download Installer</h1>\r\n+        <p>Click below to download the installer</p>\r\n+        <a href=\"/download\" class=\"download-button\">Download</a>\r\n+    </div>\r\n+    <div class=\"product-container\">\r\n+        <h2>New Product: SmartHome Controller</h2>\r\n+        <p>Revolutionize your home with the SmartHome Controller. Control all your smart devices from a single hub.</p>\r\n+        <a href=\"#\" class=\"purchase-button\">Learn More</a>\r\n+    </div>\r\n+</body>\r\n+</html>\n\\ No newline at end of file\n",
+    "additions": 21,
+    "deletions": 0,
+    "status": "added"
+  },
+  {
+    "file": "frontend/styles/style.css",
+    "patch": "Index: frontend/styles/style.css\n===================================================================\n--- frontend/styles/style.css\t\n+++ frontend/styles/style.css\t\n@@ -0,0 +1,64 @@\n+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap');\r\n+\r\n+body {\r\n+    font-family: 'Roboto', sans-serif;\r\n+    display: flex;\r\n+    justify-content: center;\r\n+    align-items: center;\r\n+    flex-direction: column;\r\n+    height: 100vh;\r\n+    margin: 0;\r\n+    background: url('../assets/cyberpunk_background.jpg') no-repeat center center fixed;\r\n+    background-size: cover;\r\n+    color: #333;\r\n+}\r\n+\r\n+.container {\r\n+    text-align: center;\r\n+    background: rgba(255, 255, 255, 0.6);\r\n+    padding: 40px;\r\n+    border-radius: 16px;\r\n+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);\r\n+    backdrop-filter: blur(10px);\r\n+    border: 1px solid rgba(255, 255, 255, 0.18);\r\n+    margin-bottom: 20px;\r\n+}\r\n+\r\n+.product-container {\r\n+    text-align: center;\r\n+    background: rgba(255, 255, 255, 0.6);\r\n+    padding: 30px;\r\n+    border-radius: 16px;\r\n+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);\r\n+    backdrop-filter: blur(10px);\r\n+    border: 1px solid rgba(255, 255, 255, 0.18);\r\n+    margin-top: 20px;\r\n+}\r\n+\r\n+h1, h2 {\r\n+    margin-bottom: 10px;\r\n+    font-weight: 700;\r\n+    color: #ffffff;\r\n+}\r\n+\r\n+p {\r\n+    font-weight: 300;\r\n+    color: #eeeeee;\r\n+}\r\n+\r\n+.download-button, .purchase-button {\r\n+    display: inline-block;\r\n+    margin-top: 20px;\r\n+    padding: 12px 30px;\r\n+    font-size: 18px;\r\n+    font-weight: 700;\r\n+    color: #fff;\r\n+    background: linear-gradient(90deg, #667eea, #764ba2);\r\n+    text-decoration: none;\r\n+    border-radius: 8px;\r\n+    transition: background 0.3s ease;\r\n+}\r\n+\r\n+.download-button:hover, .purchase-button:hover {\r\n+    background: linear-gradient(90deg, #764ba2, #667eea);\r\n+}\r\n",
+    "additions": 64,
+    "deletions": 0,
+    "status": "added"
+  }
+]
