@@ -67,6 +67,7 @@ async def stream_output(process_id: str) -> AsyncGenerator[str, None]:
 
 async def run_and_collect(command: list[str], cwd: str, timeout: int = 300) -> tuple[str, int]:
     """Executa um comando e coleta todo o output. Retorna (output, returncode)."""
+    proc = None
     try:
         proc = await asyncio.wait_for(
             asyncio.create_subprocess_exec(
@@ -83,14 +84,31 @@ async def run_and_collect(command: list[str], cwd: str, timeout: int = 300) -> t
         return "Timeout excedido", 1
     except Exception as e:
         return str(e), 1
+    finally:
+        if proc and proc.returncode is None:
+            try:
+                proc.kill()
+            except Exception:
+                pass
 
 
 def kill_process(process_id: str) -> bool:
     mp = _processes.get(process_id)
     if mp and mp.is_running and mp.process:
-        mp.process.terminate()
-        return True
+        try:
+            mp.process.terminate()
+            return True
+        except Exception:
+            return False
     return False
+
+def kill_all_processes() -> None:
+    for mp in _processes.values():
+        if mp.is_running and mp.process:
+            try:
+                mp.process.terminate()
+            except Exception:
+                pass
 
 
 def get_process(process_id: str) -> ManagedProcess | None:

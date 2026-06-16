@@ -98,6 +98,8 @@ async def on_shutdown() -> None:
     print("[RDC] Encerrando agente...")
     from services.terminal_manager import kill_all_sessions
     kill_all_sessions()
+    from services.process_manager import kill_all_processes
+    kill_all_processes()
 
 
 # ── Health check ──────────────────────────────────────────────────────────────
@@ -169,7 +171,7 @@ def main() -> None:
         port=args.port,
         reload=settings.debug,
         reload_includes=["*.py"],
-        reload_excludes=["*.db", "*.db-journal", "*.json"],
+        reload_excludes=["*.db", "*.db-journal", "*.db-wal", "*.db-shm", "*.json"],
         log_level="info",
     )
 
