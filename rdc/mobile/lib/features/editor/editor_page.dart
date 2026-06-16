@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_highlight/flutter_highlight.dart';
 import 'package:flutter_highlight/themes/atom-one-dark.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:dio/dio.dart';
 
 import '../../core/api/api_client.dart';
 import '../../core/theme/app_theme.dart';
@@ -116,7 +117,13 @@ class _EditorPageState extends State<EditorPage> with AutomaticKeepAliveClientMi
         });
       }
     } catch (e) {
-      setState(() { _error = e.toString(); _loading = false; });
+      if (mounted) {
+        if (e is DioException && e.response?.data != null) {
+          setState(() { _error = 'Server Error: ${e.response?.data}'; _loading = false; });
+        } else {
+          setState(() { _error = e.toString(); _loading = false; });
+        }
+      }
     }
   }
 

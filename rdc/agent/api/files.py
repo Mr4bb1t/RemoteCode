@@ -70,6 +70,8 @@ async def read_file(
         raise HTTPException(status_code=403, detail=str(e))
     except FileNotFoundError:
         raise HTTPException(status_code=404, detail="Arquivo não encontrado")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erro interno: {str(e)}")
 
 
 @router.put("/{project_id}/write", response_model=MessageResponse)
