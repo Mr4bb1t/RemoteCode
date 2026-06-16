@@ -156,10 +156,19 @@ class AgentGUI:
         
         top = tk.Toplevel(self.root)
         top.title("Configurar Cloudflare Fixo")
-        top.geometry("380x260")
+        top.geometry("450x380")
         top.resizable(False, False)
         
-        ttk.Label(top, text="Se você possui um túnel permanente no Cloudflare Zero Trust,\ninsira o Token abaixo para manter a mesma URL sempre.", justify=tk.CENTER).pack(pady=(10, 10))
+        info_text = (
+            "O 'Acesso Global' padrão usa túneis temporários que podem cair\n"
+            "após inatividade ou por limitação de servidores gratuitos.\n\n"
+            "Para uma conexão 100% estável, sem quedas e sem limites:\n"
+            "1. Crie uma conta no Cloudflare Zero Trust (é grátis)\n"
+            "2. Crie um 'Cloudflare Tunnel' na aba Networks > Tunnels\n"
+            "3. Copie o Token de instalação e cole abaixo\n"
+            "4. Coloque a URL do seu domínio que você configurou"
+        )
+        ttk.Label(top, text=info_text, justify=tk.CENTER).pack(pady=(15, 10))
         
         ttk.Label(top, text="Cloudflare Tunnel Token:").pack(anchor=tk.W, padx=20)
         entry_token = ttk.Entry(top, width=50)

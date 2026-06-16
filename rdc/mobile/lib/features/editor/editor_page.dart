@@ -242,6 +242,7 @@ class _HighlightView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
+      physics: const ClampingScrollPhysics(),
       child: HighlightView(
         code,
         language: language ?? 'plaintext',
@@ -272,22 +273,44 @@ class _EditableView extends StatefulWidget {
 
 class _EditableViewState extends State<_EditableView> {
   final _scrollController = ScrollController();
-  final _linesController = ScrollController();
+
+  static const double _fontSize = 13.0;
+  static const double _lineHeight = 1.5;
+  static const double _lineHeightPx = _fontSize * _lineHeight; // 19.5
+  static const double _verticalPadding = 16.0;
+  static const double _gutterWidth = 44.0;
+  static const double _dividerWidth = 1.0;
+
+  int _lineCount = 1;
 
   @override
   void initState() {
     super.initState();
-    _scrollController.addListener(() {
-      if (_linesController.hasClients && _scrollController.hasClients) {
-        _linesController.jumpTo(_scrollController.offset);
-      }
-    });
+    widget.controller.addListener(_updateLineCount);
+    _updateLineCount();
+  }
+
+  @override
+  void didUpdateWidget(covariant _EditableView old) {
+    super.didUpdateWidget(old);
+    if (old.controller != widget.controller) {
+      old.controller.removeListener(_updateLineCount);
+      widget.controller.addListener(_updateLineCount);
+      _updateLineCount();
+    }
+  }
+
+  void _updateLineCount() {
+    final count = '\n'.allMatches(widget.controller.text).length + 1;
+    if (count != _lineCount && mounted) {
+      setState(() => _lineCount = count);
+    }
   }
 
   @override
   void dispose() {
+    widget.controller.removeListener(_updateLineCount);
     _scrollController.dispose();
-    _linesController.dispose();
     super.dispose();
   }
 
@@ -296,53 +319,87 @@ class _EditableViewState extends State<_EditableView> {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Números de linha
+        // ── Calha dos números de linha ─────────────────────────────
         SizedBox(
-          width: 44,
-          child: AnimatedBuilder(
-            animation: widget.controller,
-            builder: (ctx, _) {
-              final lines = '\n'.allMatches(widget.controller.text).length + 1;
-              return ListView.builder(
-                controller: _linesController,
-                physics: const NeverScrollableScrollPhysics(),
-                padding: const EdgeInsets.only(top: 16, left: 4, right: 4, bottom: 16),
-                itemCount: lines,
-                itemBuilder: (_, i) => SizedBox(
-                  height: 19.5, // fontSize 13 * height 1.5 = 19.5
-                  child: Text(
-                    '${i + 1}',
-                    style: GoogleFonts.firaCode(fontSize: 13, color: RdcTheme.textMuted, height: 1.5),
-                    textAlign: TextAlign.right,
+          width: _gutterWidth,
+          child: ScrollConfiguration(
+            behavior: const _NoBounceScrollBehavior(),
+            child: SingleChildScrollView(
+              controller: _scrollController,
+              physics: const NeverScrollableScrollPhysics(), // escravo do scrollController
+              padding: EdgeInsets.only(
+                top: _verticalPadding,
+                bottom: _verticalPadding,
+                left: 4,
+                right: 6,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: List.generate(
+                  _lineCount,
+                  (i) => SizedBox(
+                    height: _lineHeightPx,
+                    child: Text(
+                      '${i + 1}',
+                      style: GoogleFonts.firaCode(
+                        fontSize: _fontSize,
+                        color: RdcTheme.textMuted,
+                        height: _lineHeight,
+                      ),
+                      textAlign: TextAlign.right,
+                    ),
                   ),
                 ),
-              );
-            },
+              ),
+            ),
           ),
         ),
-        Container(width: 1, color: RdcTheme.bg500),
-        // Área de texto (scroll horizontal evita wrap e mantém alinhamento com números)
+
+        Container(width: _dividerWidth, color: RdcTheme.bg500),
+
+        // ── Campo de texto ─────────────────────────────────────────
         Expanded(
-          child: SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: SizedBox(
-              width: 3000,
-              child: TextField(
-                controller: widget.controller,
-                scrollController: _scrollController,
-                maxLines: null,
-                expands: true,
-                onChanged: widget.onChanged,
-                keyboardType: TextInputType.multiline,
-                style: GoogleFonts.firaCode(fontSize: 13, color: RdcTheme.textPrimary, height: 1.5),
-                strutStyle: const StrutStyle(fontSize: 13, height: 1.5), // Força altura exata
-                decoration: const InputDecoration(
-                  contentPadding: EdgeInsets.only(top: 16, left: 8, right: 16, bottom: 16),
-                  border: InputBorder.none,
-                  enabledBorder: InputBorder.none,
-                  focusedBorder: InputBorder.none,
-                  filled: false,
-                  isDense: true,
+          child: ScrollConfiguration(
+            behavior: const _NoBounceScrollBehavior(),
+            child: SingleChildScrollView(
+              controller: _scrollController,
+              physics: const ClampingScrollPhysics(),
+              padding: EdgeInsets.only(
+                top: _verticalPadding,
+                bottom: _verticalPadding,
+              ),
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                physics: const ClampingScrollPhysics(),
+                child: SizedBox(
+                  width: 3000, // Largura suficiente para evitar quebra de linha
+                  child: IntrinsicHeight(
+                    child: TextField(
+                      controller: widget.controller,
+                      maxLines: null,
+                      // NÃO use expands: true aqui — conflita com SingleChildScrollView
+                      onChanged: widget.onChanged,
+                      keyboardType: TextInputType.multiline,
+                      style: GoogleFonts.firaCode(
+                        fontSize: _fontSize,
+                        color: RdcTheme.textPrimary,
+                        height: _lineHeight,
+                      ),
+                      strutStyle: const StrutStyle(
+                        fontSize: _fontSize,
+                        height: _lineHeight,
+                        forceStrutHeight: true, // <-- CRÍTICO: garante altura de linha exata
+                      ),
+                      decoration: const InputDecoration(
+                        contentPadding: EdgeInsets.symmetric(horizontal: 8),
+                        border: InputBorder.none,
+                        enabledBorder: InputBorder.none,
+                        focusedBorder: InputBorder.none,
+                        filled: false,
+                        isDense: true,
+                      ),
+                    ),
+                  ),
                 ),
               ),
             ),
@@ -351,6 +408,12 @@ class _EditableViewState extends State<_EditableView> {
       ],
     );
   }
+}
+
+class _NoBounceScrollBehavior extends ScrollBehavior {
+  const _NoBounceScrollBehavior();
+  @override
+  ScrollPhysics getScrollPhysics(BuildContext context) => const ClampingScrollPhysics();
 }
 
 class _EditorBtn extends StatelessWidget {

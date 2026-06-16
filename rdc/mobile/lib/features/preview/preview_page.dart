@@ -66,6 +66,25 @@ class _PreviewPageState extends State<PreviewPage> with AutomaticKeepAliveClient
     }
   }
 
+  void _updateViewport() {
+    if (_webCtrl == null) return;
+    final preset = _presets[_selectedPreset];
+    final js = '''
+      var meta = document.querySelector("meta[name=viewport]");
+      if (!meta) {
+        meta = document.createElement("meta");
+        meta.name = "viewport";
+        document.head.appendChild(meta);
+      }
+      if ("${preset.name}" === "Mobile") {
+        meta.setAttribute("content", "width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0");
+      } else {
+        meta.setAttribute("content", "width=${preset.width}");
+      }
+    ''';
+    _webCtrl!.runJavaScript(js);
+  }
+
   Future<void> _selectPort(int port) async {
     setState(() { _selectedPort = port; _webError = null; _webLoading = true; _currentUrl = ''; });
     final agentUrl = await SecureStorage.getAgentUrl() ?? '';
@@ -99,6 +118,7 @@ class _PreviewPageState extends State<PreviewPage> with AutomaticKeepAliveClient
             },
             onPageFinished: (url) {
               if (mounted) setState(() => _webLoading = false);
+              _updateViewport();
             },
           ));
 
@@ -262,7 +282,10 @@ class _PreviewPageState extends State<PreviewPage> with AutomaticKeepAliveClient
                 icon: Icon(e.value.icon, size: 18),
                 color: _selectedPreset == e.key ? RdcTheme.primary : RdcTheme.textMuted,
                 tooltip: e.value.name,
-                onPressed: () => setState(() => _selectedPreset = e.key),
+                onPressed: () {
+                  setState(() => _selectedPreset = e.key);
+                  _updateViewport();
+                },
               )).toList(),
             ),
           ]),
@@ -280,7 +303,40 @@ class _PreviewPageState extends State<PreviewPage> with AutomaticKeepAliveClient
                 onSelectPort: _selectPort,
               )
             : Stack(children: [
-                WebViewWidget(controller: _webCtrl!),
+                LayoutBuilder(builder: (ctx, constraints) {
+                  final preset = _presets[_selectedPreset];
+                  if (preset.name == 'Mobile') {
+                    return WebViewWidget(controller: _webCtrl!);
+                  }
+                  
+                  final scale = constraints.maxWidth / preset.width;
+                  final actualScale = scale < 1.0 ? scale : 1.0;
+                  final webViewHeight = constraints.maxHeight / actualScale;
+                  
+                  return Container(
+                    width: constraints.maxWidth,
+                    height: constraints.maxHeight,
+                    color: const Color(0xFF0A0A0A),
+                    alignment: Alignment.topCenter,
+                    child: FittedBox(
+                      fit: BoxFit.contain,
+                      alignment: Alignment.topCenter,
+                      child: SizedBox(
+                        width: preset.width,
+                        height: webViewHeight,
+                        child: Container(
+                          decoration: const BoxDecoration(
+                            border: Border(
+                              left: BorderSide(color: RdcTheme.bg500, width: 1), 
+                              right: BorderSide(color: RdcTheme.bg500, width: 1),
+                            )
+                          ),
+                          child: WebViewWidget(controller: _webCtrl!),
+                        ),
+                      ),
+                    ),
+                  );
+                }),
                 if (_webLoading)
                   const Positioned(
                     top: 0, left: 0, right: 0,
