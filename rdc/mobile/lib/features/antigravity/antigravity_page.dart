@@ -155,7 +155,7 @@ class _AntigravityPageState extends State<AntigravityPage> with AutomaticKeepAli
           _newSession();
         }
         _promptCtrl.text = prompt;
-        _sendPrompt();
+        _runPrompt();
       }
     });
   }
