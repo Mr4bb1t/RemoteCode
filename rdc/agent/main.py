@@ -96,6 +96,8 @@ async def on_startup() -> None:
 @app.on_event("shutdown")
 async def on_shutdown() -> None:
     print("[RDC] Encerrando agente...")
+    from services.terminal_manager import kill_all_sessions
+    kill_all_sessions()
 
 
 # ── Health check ──────────────────────────────────────────────────────────────

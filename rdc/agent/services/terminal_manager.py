@@ -69,6 +69,11 @@ def kill_session(session_id: str) -> None:
     if session:
         session.alive = False
 
+def kill_all_sessions() -> None:
+    session_ids = list(_sessions.keys())
+    for sid in session_ids:
+        kill_session(sid)
+
 
 def write_to_session(session_id: str, data: str) -> None:
     session = _sessions.get(session_id)
